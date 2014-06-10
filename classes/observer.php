@@ -3,6 +3,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/local/exam_authorization/classes/IPTools.php');
+require_once($CFG->dirroot.'/local/exam_authorization/classes/exam_authorization.php');
 require_once($CFG->libdir.'/filelib.php');
 
 class local_exam_authorization_observer {
@@ -13,8 +14,6 @@ class local_exam_authorization_observer {
     protected static $config;
 
     public static function user_loggedin(\core\event\user_loggedin $event) {
-        global $DB, $SESSION;
-
         if(is_siteadmin($event->userid) || isguestuser($event->userid)) {
             return true;
         }
@@ -40,11 +39,6 @@ class local_exam_authorization_observer {
         self::check_permissions();
         self::sync_enrols();
 
-        if(self::$role == 'teacher') {
-            $SESSION->exam_remote_courses = self::$remote_courses;
-        }
-        $SESSION->exam_role = self::$role;
-
         return true;
     }
 
@@ -58,6 +52,8 @@ class local_exam_authorization_observer {
                 self::check_monitor_permissions();
             }
         }
+        $SESSION->exam_remote_courses = self::$remote_courses;
+        $SESSION->exam_role = self::$role;
     }
 
     protected static function check_student_permissions() {
@@ -78,7 +74,7 @@ class local_exam_authorization_observer {
 
         if($local_course = $DB->get_record('course', array('shortname'=>$access_key->shortname), 'id, shortname, visible') && $local_course->visible) {
             list($identifier, $shortname) = explode('_', $access_key->shortname, 2);
-            if($remote_course = self::get_remote_course($identifier, $shortname, 'student')) {
+            if($remote_course = \local\exam_authorization::get_remote_course($identifier, $shortname, 'student')) {
                 $remote_course->local_course = $local_course;
                 self::$remote_courses[$identifier] = array($remote_course);
             } else {
@@ -94,7 +90,7 @@ class local_exam_authorization_observer {
 
     protected static function check_teacher_permissions($print_error=true) {
         if(self::check_ip_range(self::$config->ip_ranges_teachers, $print_error)) {
-            self::$remote_courses = self::get_remote_courses('teacher');
+            self::$remote_courses = \local\exam_authorization::get_remote_courses('teacher');
             if(empty(self::$remote_courses)) {
                 return self::print_error('no_teacher_permission', $print_error);
             } else {
@@ -110,7 +106,7 @@ class local_exam_authorization_observer {
         global $DB;
 
         self::$remote_courses = array();
-        foreach(self::get_remote_courses('monitor') AS $identifier=>$courses) {
+        foreach(\local\exam_authorization::get_remote_courses('monitor') AS $identifier=>$courses) {
             foreach($courses AS $rc) {
                 if($local_course = $DB->get_record('course', array('shortname'=>$rc->local_shortname), 'id, shortname, visible') && $local_course->visible) {
                     $rc->local_course = $local_course;
@@ -120,7 +116,7 @@ class local_exam_authorization_observer {
         }
 
         if(empty(self::$remote_courses)) {
-            self::print_error('no_monitor_permission');
+            self::print_error('no_access_permission');
         } else {
             self::$role = 'monitor';
         }
@@ -291,62 +287,6 @@ class local_exam_authorization_observer {
         } else {
             return false;
         }
-    }
-
-    public static function get_remote_courses($rolename='teacher', $username='') {
-        global $DB, $USER;
-
-        $function = 'local_exam_remote_get_courses';
-        if(empty($username)) {
-            $username =  self::$user->username;
-        }
-        $params = array('username'=>$username, 'rolename'=>$rolename);
-
-        $curl = new curl;
-        $curl->setopt(array('CURLOPT_SSL_VERIFYHOST'=>0, 'CURLOPT_SSL_VERIFYPEER'=>0));
-
-        $moodles = $DB->get_records('exam_authorization');
-        $courses = array();
-        foreach($moodles AS $m) {
-            $serverurl = "{$m->url}/webservice/rest/server.php?wstoken={$m->token}&wsfunction={$function}&moodlewsrestformat=json";
-            $response = $curl->post($serverurl, $params);
-            $response = json_decode($response);
-            //todo: tratar erros do curso e exceções do ws
-            if(is_array($response) ) {
-                foreach($response AS $remote_course) {
-                    $remote_course->local_shortname = "{$m->identifier}_{$remote_course->shortname}";
-                    $courses[$m->identifier][] = $remote_course;
-                }
-            }
-        }
-        return $courses;
-    }
-
-    public static function get_remote_course($identifier, $shortname, $rolename='student', $username='') {
-        global $DB, $USER;
-
-        $function = 'local_exam_remote_get_courses';
-        if(empty($username)) {
-            $username =  self::$user->username;
-        }
-        $params = array('username'=>$username, 'rolename'=>$rolename);
-
-        $curl = new curl;
-        $curl->setopt(array('CURLOPT_SSL_VERIFYHOST'=>0, 'CURLOPT_SSL_VERIFYPEER'=>0));
-
-        if($m = $DB->get_record('exam_authorization', array('identifier'=>$identifier))) {
-            $serverurl = "{$m->url}/webservice/rest/server.php?wstoken={$m->token}&wsfunction={$function}&moodlewsrestformat=json";
-            $response = $curl->post($serverurl, $params);
-            $remote_courses = json_decode($response);
-            foreach($remote_courses AS $c) {
-                if($c->shortname == $shortname) {
-                    $c->identifier = $m->identifier;
-                    $c->local_shortname = "{$m->identifier}_{$c->shortname}";
-                    return $c;
-                }
-            }
-        }
-        return false;
     }
 
 }
