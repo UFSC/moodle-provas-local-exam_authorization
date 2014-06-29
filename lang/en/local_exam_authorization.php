@@ -22,7 +22,7 @@ $string['remote_moodle'] = 'Instalação remota de Moodle integrada ao Moodle Pr
 $string['identifier'] = 'Identificador';
 $string['identifier_help'] = 'Palavra única que identifica o Moodle remoto';
 $string['description'] = 'Descrição do Moodle';
-$string['description_help'] = 'Frase que descreve o Moodle Remoto. Esta frase é utilizado como nome de categoria onde serão 
+$string['description_help'] = 'Frase que descreve o Moodle Remoto. Esta frase é utilizado como nome de categoria onde serão
     postos os cursos Moodle relacionados ao Moodle Remoto.';
 $string['url'] = 'URL do Moodle';
 $string['url_help'] = 'URL da instalação remota do Moodle';
@@ -34,3 +34,7 @@ $string['invalid_context'] = 'Deve ser uma palavra única';
 
 $string['confirmdelete'] = 'Realmente remover a relação com a instalação remota de Moodle: \'{$a}\'?';
 $string['already_exists'] = 'Já há outro registro com este valor.';
+
+$string['no_access_permission'] = 'O acesso a este ambiente é restrito a elaboradores de prova, pessoas responsáveis pela aplicação
+    de prova e estudantes (utilizando o CD de Provas) durante a realização de uma prova. Neste instante suas credenciais não o habilitam a realizar nenhuma destas
+    operações, razão pela qual seu acesso foi negado.';
