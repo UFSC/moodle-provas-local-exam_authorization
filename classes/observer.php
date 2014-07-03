@@ -57,8 +57,9 @@ class local_exam_authorization_observer {
         }
         \local\exam_authorization::check_client_host($access_key);
 
-        if($local_course = $DB->get_record('course', array('shortname'=>$access_key->shortname), 'id, shortname, visible') && $local_course->visible) {
-            list($identifier, $shortname) = explode('_', $access_key->shortname, 2);
+        $local_course = $DB->get_record('course', array('id'=>$access_key->courseid), 'id, shortname, visible');
+        if($local_course && $local_course->visible) {
+            list($identifier, $shortname) = explode('_', $local_course->shortname, 2);
             if($remote_course = \local\exam_authorization::get_remote_course($identifier, $shortname, 'student')) {
                 $remote_course->local_course = $local_course;
                 self::$remote_courses[$identifier] = array($remote_course);

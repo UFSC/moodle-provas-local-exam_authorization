@@ -2,6 +2,8 @@
 
 $string['pluginname'] = 'Controle de Acesso ao Moodle Provas';
 
+$string['disable_header_check'] = 'Desativar verificação de uso do CD';
+$string['disable_header_check_desc'] = 'Se marcada, esta opção desativa completamenta a verificação de acesso ao Moodle provas via CD de Provas.';
 $string['header_version'] = 'Versão mínima do CD';
 $string['header_version_descr'] = 'Versão mínima (ex: 1.3) suportada do CD Moodle Provas. Deixe em branco para desabilitar esta verificação.';
 $string['client_host_timeout'] = 'Tempo de expiração do cliente';

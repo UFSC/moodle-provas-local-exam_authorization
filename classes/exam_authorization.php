@@ -110,6 +110,9 @@ class exam_authorization {
     private static function load_config() {
         if(self::$config == null) {
             self::$config = get_config('local_exam_authorization');
+            if(!isset(self::$config->disable_header_check)) {
+                self::$config->disable_header_check = false;
+            }
             if(!isset(self::$config->header_version)) {
                 self::print_error('not_configured');
             }
@@ -129,6 +132,11 @@ class exam_authorization {
         global $_SERVER;
 
         self::load_config();
+
+        if(self::$config->disable_header_check) {
+            return true;
+        }
+
         $version = self::$config->header_version;
         $pattern = '/^[0-9]+\.[0-9]+$/';
 
@@ -149,6 +157,12 @@ class exam_authorization {
     public static function check_ip_header($print_error=true) {
         global $_SERVER;
 
+        self::load_config();
+
+        if(self::$config->disable_header_check) {
+            return true;
+        }
+
         if(!isset($_SERVER["HTTP_MOODLE_PROVAS_IP"]) ) {
             return self::print_error('browser_unknown_ip_header', $print_error);
         }
@@ -161,6 +175,12 @@ class exam_authorization {
 
     public static function check_network_header($print_error=true) {
         global $_SERVER;
+
+        self::load_config();
+
+        if(self::$config->disable_header_check) {
+            return true;
+        }
 
         $netmask_octet_pattern = "[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]";
         $netmask_pattern = "({$netmask_octet_pattern})(\.({$netmask_octet_pattern})){3}";
@@ -205,6 +225,11 @@ class exam_authorization {
         global $DB, $_SERVER;
 
         self::load_config();
+
+        if(self::$config->disable_header_check) {
+            return true;
+        }
+
         $timeout = self::$config->client_host_timeout;
 
         if(!empty($access_key->verify_client_host) && !empty($timeout)) {
