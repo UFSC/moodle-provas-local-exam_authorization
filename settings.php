@@ -21,9 +21,9 @@ if ($hassiteconfig && isset($ADMIN)) {
                             get_string('client_host_timeout_descr', 'local_exam_authorization'),
                             10, $client_host_timeout_options));
 
-    $settings->add(new admin_setting_configtext('local_exam_authorization/ip_ranges_teachers',
-                            get_string('ip_ranges_teachers', 'local_exam_authorization'),
-                            get_string('ip_ranges_teachers_descr', 'local_exam_authorization'),
+    $settings->add(new admin_setting_configtext('local_exam_authorization/ip_ranges_editors',
+                            get_string('ip_ranges_editors', 'local_exam_authorization'),
+                            get_string('ip_ranges_editors_descr', 'local_exam_authorization'),
                             '', PARAM_TEXT));
 
     $settings->add(new admin_setting_configtext('local_exam_authorization/ip_ranges_students',

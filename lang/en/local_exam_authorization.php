@@ -9,9 +9,9 @@ $string['header_version_descr'] = 'Versão mínima (ex: 1.3) suportada do CD Moo
 $string['client_host_timeout'] = 'Tempo de expiração do cliente';
 $string['client_host_timeout_descr'] = 'Tempo máximo (em minutos) entre a última notificação de vida do cliente e a autenticação do estudante.
     Utilize 0 (zero) para desabilitar esta verificação.';
-$string['ip_ranges_teachers'] = 'Faixas IP para professores';
-$string['ip_ranges_teachers_descr'] = 'Faixas de restrição de endereços IP (lista separada por ;)
-    a partir dos quais professores podem acessar o Moodle para elaborar provas. Deixe em branco para desabilitar esta verificação.
+$string['ip_ranges_editors'] = 'Faixas IP para elaboradores de provas';
+$string['ip_ranges_editors_descr'] = 'Faixas de restrição de endereços IP (lista separada por ;)
+    a partir dos quais pessoas podem acessar o Moodle para elaborar provas. Deixe em branco para desabilitar esta verificação.
     Ex: 10.0.\*.\*; 192.168.0.\*';
 $string['ip_ranges_students'] = 'Faixas IP para estudantes';
 $string['ip_ranges_students_descr'] = 'Faixas de restrição de endereços IP (lista separada por ;)
@@ -36,7 +36,18 @@ $string['invalid_context'] = 'Deve ser uma palavra única';
 
 $string['confirmdelete'] = 'Realmente remover a relação com a instalação remota de Moodle: \'{$a}\'?';
 $string['already_exists'] = 'Já há outro registro com este valor.';
-
-$string['no_access_permission'] = 'O acesso a este ambiente é restrito a elaboradores de prova, pessoas responsáveis pela aplicação
-    de prova e estudantes (utilizando o CD de Provas) durante a realização de uma prova. Neste instante suas credenciais não o habilitam a realizar nenhuma destas
-    operações, razão pela qual seu acesso foi negado.';
+$string['access_key_timedout'] = 'Chave de acesso com validade expirada';
+$string['access_key_unknown'] = 'Chave de acesso desconhecida';
+$string['no_student_identifier'] = 'O computador que você está utilizando está liberado para realizar prova mas ';
+$string['unknown_identifier'] = 'Identificador de Moodle desconhecido: \'{$a}\'';
+$string['return_null'] = 'Há algum problema com a configuração do Moodle remoto \'{$a}\' pois retornou valor nulo ao ser chamado';
+$string['no_access_permission'] = 'O acesso a este ambiente é restrito a:
+    <UL>
+    <LI>elaboradores de prova;</LI>
+    <LI>pessoas responsáveis pela aplicação de prova;</LI>
+    <LI>estudantes durante a realização de uma prova, após o computador ter sido liberado pelo responsável para realização de prova.</LI>
+    </UL>
+    Suas credenciais não o habilitam a realizar nenhuma destas operações neste momento, razão pela qual seu acesso foi negado.';
+$string['no_student_permission'] = 'Este computador está liberado para realização de provas, razão pela qual o acesso é permitido apenas a estudantes
+    durante a realização da prova correspondente à chave de acesso utilizada para liberá-lo.';
+$string['course_not_avaliable'] = 'Você não tem permissão de acesso ao curso Moodle correspondente à chave de acesso informada.';
