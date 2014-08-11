@@ -31,6 +31,29 @@ if ($hassiteconfig && isset($ADMIN)) {
                             get_string('ip_ranges_students_descr', 'local_exam_authorization'),
                             '', PARAM_TEXT));
 
+    $context = context_system::instance();
+    $role_names = role_fix_names(get_all_roles($context), $context);
+    $sql = "SELECT *
+              FROM {role}
+             WHERE shortname NOT IN ('manager', 'guest', 'user', 'frontpage', 'student', 'editingteacher', 'coursecreator')";
+    $roles = $DB->get_records_sql($sql);
+    $roles_menu = array(0=>get_string('none'));
+    foreach ($roles as $r) {
+        $roles_menu[$r->id] = $role_names[$r->id]->localname;
+    }
+
+    $settings->add(new admin_setting_configselect('local_exam_authorization/proctor_roleid',
+                            get_string('proctor_roleid', 'local_exam_authorization'),
+                            get_string('proctor_roleid_descr', 'local_exam_authorization'),
+                            0, $roles_menu));
+
+    $settings->add(new admin_setting_configselect('local_exam_authorization/monitor_roleid',
+                            get_string('monitor_roleid', 'local_exam_authorization'),
+                            get_string('monitor_roleid_descr', 'local_exam_authorization'),
+                            0, $roles_menu));
+
+    // -------------------------------------------------------------------------------------------------
+
     $table = new html_table();
     $table->head  = array(get_string('identifier', 'local_exam_authorization') . $OUTPUT->help_icon('identifier', 'local_exam_authorization'),
                           get_string('description', 'local_exam_authorization') . $OUTPUT->help_icon('description', 'local_exam_authorization'),

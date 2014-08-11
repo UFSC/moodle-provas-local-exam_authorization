@@ -38,16 +38,23 @@ $string['confirmdelete'] = 'Realmente remover a relação com a instalação rem
 $string['already_exists'] = 'Já há outro registro com este valor.';
 $string['access_key_timedout'] = 'Chave de acesso com validade expirada';
 $string['access_key_unknown'] = 'Chave de acesso desconhecida';
-$string['no_student_identifier'] = 'O computador que você está utilizando está liberado para realizar prova mas ';
 $string['unknown_identifier'] = 'Identificador de Moodle desconhecido: \'{$a}\'';
 $string['return_null'] = 'Há algum problema com a configuração do Moodle remoto \'{$a}\' pois retornou valor nulo ao ser chamado';
 $string['no_access_permission'] = 'O acesso a este ambiente é restrito a:
     <UL>
     <LI>elaboradores de prova;</LI>
-    <LI>pessoas responsáveis pela aplicação de prova;</LI>
+    <LI>pessoas responsáveis pela aplicação ou monitoramente de provas;</LI>
     <LI>estudantes durante a realização de uma prova, após o computador ter sido liberado pelo responsável para realização de prova.</LI>
     </UL>
     Suas credenciais não o habilitam a realizar nenhuma destas operações neste momento, razão pela qual seu acesso foi negado.';
 $string['no_student_permission'] = 'Este computador está liberado para realização de provas, razão pela qual o acesso é permitido apenas a estudantes
     durante a realização da prova correspondente à chave de acesso utilizada para liberá-lo.';
-$string['course_not_avaliable'] = 'Você não tem permissão de acesso ao curso Moodle correspondente à chave de acesso informada.';
+$string['more_than_student_permission'] = 'Este computador está liberado para realização de provas, porém você tem outros papeis além de estudante
+    curso Moodle correspondente à chave de acesso utilizada para liberá-lo.';
+$string['course_not_avaliable'] = 'Curso Moodle correspondente à chave de acesso informada inexistente ou indisponível.';
+$string['out_of_ip_ranges'] = 'Operação não permitida a partir deste computador em função de restrição de números IP';
+
+$string['proctor_roleid'] = 'Papel para responsáveis';
+$string['proctor_roleid_descr'] = 'Papel com os quais os responsáveis por aplicar provas são inscritos nos cursos Moodle.';
+$string['monitor_roleid'] = 'Papel para monitores';
+$string['monitor_roleid_descr'] = 'Papel com os quais pessoas que monitoram provas são inscritos nos cursos Moodle.';
