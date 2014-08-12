@@ -28,10 +28,17 @@ class authorization {
     }
 
     public static function has_function_except_student($username) {
-        $functions = self::get_remote_user_functions($username);
-        foreach($functions AS $f->$identifiers) {
-            if($f != 'student') {
-                return true;
+        $ws_function = 'local_exam_remote_has_exam_capability';
+        $params = array('username'=>$username);
+
+        self::$errors = array();
+        foreach(self::get_moodles() AS $m) {
+            try {
+                if(self::call_remote_function($m->identifier, $ws_function, $params)) {
+                    return true;
+                }
+            } catch (\Exception $e) {
+                self::$errors[$ident] = $e->getMessage();
             }
         }
         return false;
@@ -74,16 +81,8 @@ class authorization {
             $roleids['monitor'] = self::$config->monitor_roleid;
         }
 
-        if($studentid = $DB->get_field('role', 'id', array('shortname'=>'student'))) {
-            $roleids['student'] = $studentid;
-        } else {
-            self::print_error('role_unknown', 'student');
-        }
-        if($editorid = $DB->get_field('role', 'id', array('shortname'=>'editingteacher'))) {
-            $roleids['editor'] = $editorid;
-        } else {
-            self::print_error('role_unknown', 'editingteacher');
-        }
+        $roleids['student'] = $DB->get_field('role', 'id', array('shortname'=>'student'), MUST_EXIST);
+        $roleids['editor'] = $DB->get_field('role', 'id', array('shortname'=>'editingteacher'), MUST_EXIST);
 
         if (!enrol_is_enabled('manual')) {
             self::print_error('enrol_not_active');
@@ -222,26 +221,6 @@ class authorization {
 
     // ========================================================================================
     // Private functions
-
-    private static function get_remote_user_functions($username) {
-        $ws_function = 'local_exam_remote_get_remote_user_functions';
-        $params = array('username'=>$username);
-
-        $functions = array();
-        self::$errors = array();
-        foreach(self::get_moodles() AS $m) {
-            try {
-                $funcs = self::call_remote_function($m->identifier, $ws_function, $params);
-                foreach($funcs AS $f) {
-                    $functions[$f][] = $m->identifier;
-                }
-            } catch (\Exception $e) {
-                self::$errors[$ident] = $e->getMessage();
-            }
-        }
-        ksort($functions);
-        return $functions;
-    }
 
     public static function get_remote_courses($username, $identifier='') {
         global $DB;
