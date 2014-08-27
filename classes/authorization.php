@@ -38,7 +38,7 @@ class authorization {
                     return true;
                 }
             } catch (\Exception $e) {
-                self::$errors[$ident] = $e->getMessage();
+                self::$errors[$m->identifier] = $e->getMessage();
             }
         }
         return false;
