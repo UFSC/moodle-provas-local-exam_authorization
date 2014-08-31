@@ -46,6 +46,21 @@ class authorization {
         return true;
     }
 
+    public static function get_errors() {
+        return self::$errors;
+    }
+
+    public static function review_permissions($user) {
+        global $SESSION;
+
+        if(!isset($SESSION->exam_user_functions) || in_array('student', $SESSION->exam_user_functions)) {
+            return false;
+        }
+
+        self::calculate_functions($user->username);
+        self::sync_enrols($user->id);
+    }
+
     public static function has_function_except_student($username) {
         $ws_function = 'local_exam_remote_has_exam_capability';
         $params = array('username'=>$username);
@@ -71,9 +86,8 @@ class authorization {
             unset($SESSION->exam_access_key);
             self::check_student_permission($user, $access_key);
         } else {
-            $SESSION->exam_courses = self::get_remote_courses($user->username);
             self::calculate_functions($user->username);
-            if(empty($SESSION->exam_functions)) {
+            if(empty($SESSION->exam_user_functions)) {
                 self::print_error('no_access_permission');
             }
         }
@@ -111,10 +125,10 @@ class authorization {
         }
 
         // activate only the necessary enrolments
-        foreach($SESSION->exam_functions AS $f=>$courses) {
+        foreach($SESSION->exam_user_courseids AS $f=>$course_ids) {
             if(isset($roleids[$f])) {
                 $roleid = $roleids[$f];
-                foreach($courses AS $shortname=>$courseid) {
+                foreach($course_ids AS $courseid) {
                     $instances = $DB->get_records('enrol', array('enrol'=>'manual', 'courseid'=>$courseid), 'id ASC');
                     if($instance = reset($instances)) {
                         if($instance->status == ENROL_INSTANCE_DISABLED) {
@@ -155,21 +169,20 @@ class authorization {
             self::print_error($e->getMessage());
         }
 
-        $local_course = $DB->get_record('course', array('id'=>$rec_key->courseid), 'id, shortname, visible');
-        if($local_course && $local_course->visible) {
-            list($identifier, $shortname) = explode('_', $local_course->shortname, 2);
-            if($course = self::get_remote_course($user->username, $identifier, $shortname)) {
-                if(!in_array('student', $course->functions)) {
+        $course = $DB->get_record('course', array('id'=>$rec_key->courseid), 'id, shortname, visible');
+        if($course && $course->visible) {
+            list($identifier, $shortname) = explode('_', $course->shortname, 2);
+            if($remote_course = self::get_remote_course($user->username, $identifier, $shortname)) {
+                if(!in_array('student', $remote_course->functions)) {
                     self::add_to_log($access_key, $user->id, 'no_student_permission');
                     self::print_error('no_student_permission');
-                } else if(count($course->functions) > 1) {
+                } else if(count($remote_course->functions) > 1) {
                     self::add_to_log($access_key, $user->id, 'more_than_student_permission');
                     self::print_error('more_than_student_permission');
                 } else {
-                    $course->local_course = $local_course;
-                    $SESSION->exam_courses = array($identifier=>array($course));
-                    $SESSION->exam_functions = array('student'=>array($local_course->shortname=>$local_course->id));
                     self::add_to_log($access_key, $user->id, 'ok');
+                    $SESSION->exam_user_functions = array('student');
+                    $SESSION->exam_user_courseids = array('student'=>array($course->id));
                 }
             } else {
                 self::add_to_log($access_key, $user->id, 'no_student_permission');
@@ -209,33 +222,40 @@ class authorization {
         $DB->insert_record('exam_access_keys_log', $rec);
     }
 
-    public static function calculate_functions($username) {
+    private static function calculate_functions($username) {
         global $DB, $SESSION;
 
-        if(!isset($SESSION->exam_courses)) {
-            $SESSION->exam_courses = self::get_remote_courses($username);
-        }
+        $remote_courses = self::get_remote_courses($username);
 
         $ip_range_editor_ok = self::check_ip_range_editor(false);
-        $functions = array();
-        foreach($SESSION->exam_courses AS $identifier=>$cs) {
-            foreach($cs AS $course) {
-                $shortname = "{$identifier}_{$course->shortname}";
-                if($local_course = $DB->get_record('course', array('shortname'=>$shortname), 'id, shortname, visible')) {
-                    foreach($course->functions AS $f) {
+        $user_functions = array();
+        $user_courses = array();
+        foreach($remote_courses AS $identifier=>$rcourses) {
+            foreach($rcourses AS $rcourse) {
+                foreach($rcourse->functions AS $f) {
+                    $user_functions[$f] = true;
+                }
+                $shortname = "{$identifier}_{$rcourse->shortname}";
+                if($courseid = $DB->get_field('course', 'id', array('shortname'=>$shortname))) {
+                    foreach($rcourse->functions AS $f) {
                         if($f == 'editor') {
                             if($ip_range_editor_ok) {
-                                $functions[$f][$shortname] = $local_course->id;
+                                $user_courses[$f][] = $courseid;
                             }
                         } else if($f != 'student') {
-                            $functions[$f][$shortname] = $local_course->id;
+                            $user_courses[$f][] = $courseid;
                         }
                     }
                 }
             }
         }
-        ksort($functions);
-        $SESSION->exam_functions = $functions;
+
+        if(isset($user_functions['student'])) {
+            unset($user_functions['student']);
+        }
+
+        $SESSION->exam_user_functions = array_keys($user_functions);
+        $SESSION->exam_user_courseids = $user_courses;
     }
 
     // ========================================================================================
