@@ -164,7 +164,7 @@ class authorization {
             self::check_ip_header();
             self::check_network_header();
             self::check_client_host($rec_key);
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
             self::add_to_log($access_key, $user->id, $e->getMessage());
             self::print_error($e->getMessage());
         }
@@ -256,6 +256,7 @@ class authorization {
 
         $SESSION->exam_user_functions = array_keys($user_functions);
         $SESSION->exam_user_courseids = $user_courses;
+        $SESSION->exam_user_mayedit = $ip_range_editor_ok;
     }
 
     // ========================================================================================
@@ -389,8 +390,6 @@ class authorization {
     }
 
     public static function check_version_header() {
-        global $_SERVER;
-
         if(self::is_header_check_disabled()) {
             return true;
         }
@@ -399,14 +398,14 @@ class authorization {
         $pattern = '/^[0-9]+\.[0-9]+$/';
 
         if(! isset($_SERVER["HTTP_MOODLE_PROVAS_VERSION"]) ) {
-            throw new Exception('browser_no_version_header');
+            throw new \Exception('browser_no_version_header');
         }
         if(!preg_match($pattern, $_SERVER['HTTP_MOODLE_PROVAS_VERSION'])) {
-            throw new Exception('browser_invalid_version_header');
+            throw new \Exception('browser_invalid_version_header');
         }
         if (!empty($version)) {
             if ($_SERVER["HTTP_MOODLE_PROVAS_VERSION"] < $version) {
-                throw new Exception('browser_old_version');
+                throw new \Exception('browser_old_version');
             }
         }
         return true;
@@ -420,11 +419,11 @@ class authorization {
         }
 
         if(!isset($_SERVER["HTTP_MOODLE_PROVAS_IP"]) ) {
-            throw new Exception('browser_unknown_ip_header');
+            throw new \Exception('browser_unknown_ip_header');
         }
         $oct = explode('.', $_SERVER["HTTP_MOODLE_PROVAS_IP"]);
         if(!filter_var($_SERVER["HTTP_MOODLE_PROVAS_IP"], FILTER_VALIDATE_IP) || empty($oct[0]) || empty($oct[3])) {
-            throw new Exception('browser_invalid_ip_header');
+            throw new \Exception('browser_invalid_ip_header');
         }
         return true;
     }
@@ -441,10 +440,10 @@ class authorization {
         $pattern = "/^{$netmask_pattern}\/[1-9][0-9]?$/";
 
         if(! isset($_SERVER["HTTP_MOODLE_PROVAS_NETWORK"]) ) {
-            throw new Exception('browser_unknown_network_header');
+            throw new \Exception('browser_unknown_network_header');
         }
         if(!preg_match($pattern, $_SERVER['HTTP_MOODLE_PROVAS_NETWORK'])) {
-            throw new Exception('browser_invalid_network_header');
+            throw new \Exception('browser_invalid_network_header');
         }
         return true;
     }
@@ -454,7 +453,7 @@ class authorization {
         try {
             self::check_ip_range(self::$config->ip_ranges_students);
             return true;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return false;
         }
     }
@@ -464,7 +463,7 @@ class authorization {
         try {
             self::check_ip_range(self::$config->ip_ranges_editors);
             return true;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return false;
         }
     }
@@ -480,7 +479,7 @@ class authorization {
                     return true;
                 }
             }
-            throw new Exception('out_of_ip_ranges');
+            throw new \Exception('out_of_ip_ranges');
         }
         return true;
     }
@@ -501,14 +500,14 @@ class authorization {
                   ORDER BY timemodified DESC
                      LIMIT 1";
             if(!$client = $DB->get_record_sql($sql)) {
-                throw new Exception('unknow_client_host');
+                throw new \Exception('unknow_client_host');
             }
             if ($client->timemodified + $timeout * 60 < time()) {
-                throw new Exception('client_host_timeout');
+                throw new \Exception('client_host_timeout');
             }
 
-            if($access_key->ip != $client->real_ip && !$this->ipCIDRCheck($access_key->ip, $client->network)) {
-                throw new Exception('client_host_out_of_subnet');
+            if($access_key->ip != $client->real_ip && !self::ipCIDRCheck($access_key->ip, $client->network)) {
+                throw new \Exception('client_host_out_of_subnet');
             }
         }
         return true;

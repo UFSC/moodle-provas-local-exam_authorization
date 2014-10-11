@@ -77,3 +77,7 @@ $string['proctor_roleid'] = 'Papel para responsáveis';
 $string['proctor_roleid_descr'] = 'Papel com os quais os responsáveis por aplicar provas são inscritos nos cursos Moodle.';
 $string['monitor_roleid'] = 'Papel para monitores';
 $string['monitor_roleid_descr'] = 'Papel com os quais pessoas que monitoram provas são inscritos nos cursos Moodle.';
+
+$string['browser_no_version_header'] = 'Não foi possível validar a versão do CD de Provas.';
+$string['browser_invalid_version_header'] = 'Versão inválida do CD de Provas.';
+$string['browser_old_version'] = 'Versão antiga do CD de Provas.';
