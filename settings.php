@@ -27,7 +27,7 @@ if ($hassiteconfig && isset($ADMIN)) {
     $settings->add(new admin_setting_configcheckbox('local_exam_authorization/disable_header_check',
                             get_string('disable_header_check', 'local_exam_authorization'),
                             get_string('disable_header_check_desc', 'local_exam_authorization'),
-                            0));
+                            '0'));
 
     $settings->add(new admin_setting_configtext('local_exam_authorization/header_version',
                             get_string('header_version', 'local_exam_authorization'),
@@ -71,6 +71,10 @@ if ($hassiteconfig && isset($ADMIN)) {
                             get_string('monitor_roleid_descr', 'local_exam_authorization'),
                             0, $roles_menu));
 
+    $settings->add(new admin_setting_configcheckbox('local_exam_authorization/update_password',
+                            get_string('update_password', 'local_exam_authorization'),
+                            get_string('update_password_descr', 'local_exam_authorization'),
+                            '1'));
     // -------------------------------------------------------------------------------------------------
 
     $table = new html_table();
