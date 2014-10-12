@@ -1,20 +1,30 @@
 <?php
 define('CLI_SCRIPT', true);
 
-require_once('../../../config.php');
+require_once(dirname(__FILE__).'/../../../config.php');
 
 $systemcontext = context_system::instance();
 
+echo "=> Creating roles:\n";
 if(!$DB->record_exists('role', array('shortname'=>'proctor'))) {
     $roleid = create_role('Responsáveis por aplicar provas', 'proctor', 'Responsáveis por aplicar provas');
     set_role_contextlevels($roleid, array(CONTEXT_COURSE));
     assign_capability('block/exam_actions:conduct_exam', CAP_ALLOW, $roleid, $systemcontext->id);
+    echo "      - role 'proctor'\n";
 }
 
 if(!$DB->record_exists('role', array('shortname'=>'monitor'))) {
     $roleid = create_role('Monitoram provas', 'monitor', 'Monitoram provas');
     set_role_contextlevels($roleid, array(CONTEXT_COURSE));
     assign_capability('block/exam_actions:monitor_exam', CAP_ALLOW, $roleid, $systemcontext->id);
+    echo "      - role 'monitor'\n";
+}
+
+echo "=> Removing permitions to 'editingteacher' assign, override and switch roles\n";
+if($roleid = $DB->get_field('role', 'id', array('shortname'=>'editingteacher'))) {
+    $DB->delete_records('role_allow_assign',   array('roleid'=>$roleid));
+    $DB->delete_records('role_allow_override', array('roleid'=>$roleid));
+    $DB->delete_records('role_allow_switch',   array('roleid'=>$roleid));
 }
 
 $del_caps = array('student'=>array(
@@ -58,9 +68,7 @@ $del_caps = array('student'=>array(
                           'block/calendar_upcoming:myaddinstance',
                           'block/comments:myaddinstance',
                           'block/community:myaddinstance',
-                          'block/course_list:myaddinstance',
                           'block/glossary_random:myaddinstance',
-                          'block/html:myaddinstance',
                           'block/mentees:myaddinstance',
                           'block/messages:myaddinstance',
                           'block/mnet_hosts:myaddinstance',
@@ -217,8 +225,9 @@ $del_caps = array('student'=>array(
                           'mod/wiki:viewpage',
                           ),
             );
-                       
+echo "=> Unassigning capabilities:\n";
 foreach($del_caps AS $role=>$caps) {
+    echo "      - from: {$role}\n";
     if($roleid = $DB->get_field('role', 'id', array('shortname'=>$role))) {
         foreach($caps AS $cap) {
             unassign_capability($cap, $roleid);
@@ -340,12 +349,12 @@ $blocks = array(
                 'tags',
                 );
 
+echo "=> desabling message processors\n";
 $DB->set_field('message_processors', 'enabled', '0');      // Disable output
 
-
-https://provas3.moodle.ufsc.br/admin/enrol.php?sesskey=NDWqjFuzNO&action=disable&enrol=guest
-
+echo "=> hidding some modules:\n";
 foreach($modules AS $mod_name) {
+    echo "      - {$mod_name}\n";
     if ($module = $DB->get_record("modules", array("name"=>$mod_name))) {
         $DB->set_field("modules", "visible", "0", array("id"=>$module->id));
 
@@ -356,12 +365,15 @@ foreach($modules AS $mod_name) {
     }
 }
 
+echo "=> hidding some blocks:\n";
 foreach($blocks AS $blk_name) {
-   if ($block = $DB->get_record('block', array('name'=>$blk_name))) {
-       $DB->set_field('block', 'visible', '0', array('id'=>$block->id));
-   }
+    echo "      - {$blk_name}\n";
+    if ($block = $DB->get_record('block', array('name'=>$blk_name))) {
+        $DB->set_field('block', 'visible', '0', array('id'=>$block->id));
+    }
 }
 
+echo "=> changing global settings:\n";
 foreach($configs AS $cfg) {
     if(count($cfg) == 2) {
         set_config($cfg[0], $cfg[1]);
@@ -369,3 +381,5 @@ foreach($configs AS $cfg) {
         set_config($cfg[0], $cfg[1], $cfg[2]);
     }
 }
+
+echo "=> end\n";
