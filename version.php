@@ -21,7 +21,7 @@
 // como publicada pela "Free Software Foundation".
 
 /**
- * Version details
+ * Version details.
  *
  * @package    local_exam_authorization
  * @author     Antonio Carlos Mariani
