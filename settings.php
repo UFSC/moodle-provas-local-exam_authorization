@@ -102,8 +102,10 @@ if ($hassiteconfig && isset($ADMIN)) {
         $line = array($cfg->identifier, $cfg->description, $cfg->url, $cfg->token);
 
         $buttons = array();
-        $buttons[] = html_writer::link(new moodle_url('/local/exam_authorization/edit.php', array('id'=>$cfg->id, 'delete'=>1)),
-            html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('t/delete'), 'alt'=>get_string('delete'), 'title'=>get_string('delete'), 'class'=>'iconsmall')));
+        if(!$DB->record_exists_sql("SELECT 1 FROM {course} WHERE shortname LIKE '{$cfg->identifier}_%'")) {
+            $buttons[] = html_writer::link(new moodle_url('/local/exam_authorization/edit.php', array('id'=>$cfg->id, 'delete'=>1)),
+                html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('t/delete'), 'alt'=>get_string('delete'), 'title'=>get_string('delete'), 'class'=>'iconsmall')));
+        }
         $buttons[] = html_writer::link(new moodle_url('/local/exam_authorization/edit.php', array('id'=>$cfg->id)),
             html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('t/edit'), 'alt'=>get_string('edit'), 'title'=>get_string('edit'), 'class'=>'iconsmall')));
         $line[] = implode(' ', $buttons);

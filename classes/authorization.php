@@ -63,7 +63,7 @@ class authorization {
     public static function review_permissions($user) {
         global $SESSION;
 
-        if(!isset($SESSION->exam_user_functions) || in_array('student', $SESSION->exam_user_functions)) {
+        if(isset($SESSION->exam_user_functions) && in_array('student', $SESSION->exam_user_functions)) {
             return false;
         }
 
