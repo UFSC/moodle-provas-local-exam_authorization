@@ -52,8 +52,16 @@ if($id = optional_param('id', 0, PARAM_INT)) {
     $moodle->token = '';
 }
 
-if (optional_param('confirmdelete', 0, PARAM_BOOL) && confirm_sesskey() && $id) {
+$action = optional_param('action', false, PARAM_TEXT);
+
+if ($action == 'confirmdelete' && confirm_sesskey() && $id) {
     $DB->delete_records('exam_authorization', array('id'=>$id));
+    redirect($returnurl);
+} else if($action == 'enable' && $id) {
+    $DB->set_field('exam_authorization', 'enable', 1, array('id'=>$id));
+    redirect($returnurl);
+} else if($action == 'disable' && $id) {
+    $DB->set_field('exam_authorization', 'enable', 0, array('id'=>$id));
     redirect($returnurl);
 }
 
@@ -63,10 +71,10 @@ $PAGE->set_url($url);
 $PAGE->set_heading($COURSE->fullname);
 $PAGE->set_title($navtitle);
 
-if (optional_param('delete', 0, PARAM_BOOL) && $id) {
+if ($action == 'delete' && $id) {
     echo $OUTPUT->header();
     echo $OUTPUT->heading(get_string('remote_moodle', 'local_exam_authorization'));
-    $yesurl = new moodle_url('/local/exam_authorization/edit.php', array('id'=>$id, 'confirmdelete'=>1, 'sesskey'=>sesskey()));
+    $yesurl = new moodle_url('/local/exam_authorization/edit.php', array('id'=>$id, 'action'=>'confirmdelete', 'sesskey'=>sesskey()));
     $message = get_string('confirmdelete', 'local_exam_authorization', $moodle->identifier);
     echo $OUTPUT->confirm($message, $yesurl, $returnurl);
     echo $OUTPUT->footer();
@@ -84,6 +92,7 @@ if ($editform->is_cancelled()) {
     } else {
         $data->timeadded = time();
         $data->timemodified = time();
+        $data->enable = 1;
         $id = $DB->insert_record('exam_authorization', $data);
         $data->id = $id;
     }

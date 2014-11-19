@@ -39,8 +39,8 @@ class authorization {
 
     private static $moodles = null;
     private static $config = null;
-    private static $errors = null;
 
+    // process the user_loggedin event
     public static function user_loggedin(\core\event\user_loggedin $event) {
         if(is_siteadmin($event->userid) || isguestuser($event->userid)) {
             return true;
@@ -56,101 +56,135 @@ class authorization {
         return true;
     }
 
-    public static function get_errors() {
-        return self::$errors;
-    }
-
+    // review de user's permisstion, except the student case
     public static function review_permissions($user) {
         global $SESSION;
 
-        if(isset($SESSION->exam_user_functions) && in_array('student', $SESSION->exam_user_functions)) {
-            return false;
+        if(isset($SESSION->exam_taking_exam) && $SESSION->exam_taking_exam) {
+            return;
         }
 
-        self::calculate_functions($user->username);
+        self::calculate_user_functions($user->username);
         self::sync_enrols($user->id);
     }
 
+    // verify if the user has an function other than student.
+    // returns true or false reflection the case or a message (string)if any exception occurs
     public static function has_function_except_student($username) {
         $ws_function = 'local_exam_remote_has_exam_capability';
         $params = array('username'=>$username);
 
-        self::$errors = array();
         foreach(self::get_moodles() AS $m) {
             try {
                 if(self::call_remote_function($m->identifier, $ws_function, $params)) {
                     return true;
                 }
             } catch (\Exception $e) {
-                self::$errors[$m->identifier] = $e->getMessage();
+                add_to_log(0, 'exam', 'has_function_except_student', 'login/index.php', "username={$username};moodle={$m->identifier};".$e->getMessage());
             }
         }
         return false;
     }
 
+    // check the user permissions
     private static function check_permissions($user) {
         global $SESSION;
 
         if (isset($SESSION->exam_access_key)) {
             $access_key = $SESSION->exam_access_key;
             unset($SESSION->exam_access_key);
+
+            $num_sessions = self::number_of_active_sessions($user->id);
+            if($num_sessions > 1) {
+                self::add_to_log($access_key, $user->id, 'more_than_one_session');
+                self::delete_other_sessions($user->id);
+            }
+
+            $SESSION->exam_taking_exam = true;
             self::check_student_permission($user, $access_key);
         } else {
-            self::calculate_functions($user->username);
-            if(empty($SESSION->exam_user_functions)) {
-                self::print_error('no_access_permission');
+            if(self::number_of_active_sessions($user->id) > 1) {
+                if(self::has_student_active_sessions($user->id)) {
+                    self::print_error('has_student_session');
+                } else {
+                    self::delete_other_sessions($user->id);
+                }
             }
+            $SESSION->exam_taking_exam = false;
+            self::calculate_user_functions($user->username);
         }
     }
 
+    // sync enrols in the course the user has rights
     private static function sync_enrols($userid) {
         global $DB, $SESSION;
 
-        // suspend all user enrolments
-        $ues = $DB->get_records('user_enrolments', array('userid'=>$userid, 'status'=>ENROL_USER_ACTIVE));
+        if(!isset($SESSION->exam_user_courses)) {
+            return;
+        }
+
+        if (!enrol_is_enabled('manual')) {
+            self::error('enrol_not_active');
+        }
+        if (!$plugin = enrol_get_plugin('manual')) {
+            self::error('enrol_not_active');
+        }
+
+        // identify the roleids
+        $functions_roleids = array();
+        if(!empty(self::$config->proctor_roleid) && $DB->record_exists('role', array('id'=>self::$config->proctor_roleid))) {
+            $functions_roleids['proctor'] = self::$config->proctor_roleid;
+        }
+        if(!empty(self::$config->monitor_roleid) && $DB->record_exists('role', array('id'=>self::$config->monitor_roleid))) {
+            $functions_roleids['monitor'] = self::$config->monitor_roleid;
+        }
+        $functions_roleids['student'] = $DB->get_field('role', 'id', array('shortname'=>'student'), MUST_EXIST);
+        $functions_roleids['editor'] = $DB->get_field('role', 'id', array('shortname'=>'editingteacher'), MUST_EXIST);
+
+        $roleids_functions = array_flip($functions_roleids);
+
+        // suspend/role_unassign all unnecessary user enrolments
+        $ues = $DB->get_records('user_enrolments', array('userid'=>$userid));
         foreach($ues AS $ue) {
             if($enrol = $DB->get_record('enrol', array('id'=>$ue->enrolid))) {
-                if($plugin = enrol_get_plugin($enrol->enrol)) {
+                if(isset($SESSION->exam_user_courses[$enrol->courseid])) {
+                    $context = \context_course::instance($enrol->courseid, MUST_EXIST);
+                    $ras = $DB->get_records('role_assignments', array('contextid'=>$context->id, 'userid'=>$userid));
+                    foreach($ras as $ra) {
+                        if(isset($roleids_functions[$ra->roleid])) {
+                            $func = $roleids_functions[$ra->roleid];
+                            if(!in_array($func, $SESSION->exam_user_courses[$enrol->courseid])) {
+                                role_unassign($ra->roleid, $userid, $context->id);
+                            }
+                        } else {
+                            role_unassign($ra->roleid, $userid, $context->id);
+                        }
+                    }
+                } else {
                     $plugin->update_user_enrol($enrol, $userid, ENROL_USER_SUSPENDED);
                 }
             }
         }
 
-        $roleids = array();
-        if(!empty(self::$config->proctor_roleid)) {
-            $roleids['proctor'] = self::$config->proctor_roleid;
-        }
-        if(!empty(self::$config->monitor_roleid)) {
-            $roleids['monitor'] = self::$config->monitor_roleid;
-        }
-
-        $roleids['student'] = $DB->get_field('role', 'id', array('shortname'=>'student'), MUST_EXIST);
-        $roleids['editor'] = $DB->get_field('role', 'id', array('shortname'=>'editingteacher'), MUST_EXIST);
-
-        if (!enrol_is_enabled('manual')) {
-            self::print_error('enrol_not_active');
-        }
-        if (!$enrol = enrol_get_plugin('manual')) {
-            self::print_error('enrol_not_active');
-        }
-
         // activate only the necessary enrolments
-        foreach($SESSION->exam_user_courseids AS $f=>$course_ids) {
-            if(isset($roleids[$f])) {
-                $roleid = $roleids[$f];
-                foreach($course_ids AS $courseid) {
-                    $instances = $DB->get_records('enrol', array('enrol'=>'manual', 'courseid'=>$courseid), 'id ASC');
-                    if($instance = reset($instances)) {
-                        if($instance->status == ENROL_INSTANCE_DISABLED) {
-                            $enrol->update_status($instance, ENROL_INSTANCE_ENABLED);
-                        }
-                    } else {
-                        $course = new \stdClass();
-                        $course->id = $courseid;
-                        $enrolid = $enrol->add_instance($course);
-                        $instance = $DB->get_record('enrol', array('id'=>$enrolid));
+        foreach($SESSION->exam_user_courses AS $courseid=>$functions) {
+            $instances = $DB->get_records('enrol', array('enrol'=>'manual', 'courseid'=>$courseid), 'id ASC');
+            if($instance = reset($instances)) {
+                if($instance->status == ENROL_INSTANCE_DISABLED) {
+                    $plugin->update_status($instance, ENROL_INSTANCE_ENABLED);
+                }
+            } else {
+                if($course = $DB->get_record('course', array('id'=>$courseid))) {
+                    $enrolid = $plugin->add_instance($course);
+                    $instance = $DB->get_record('enrol', array('id'=>$enrolid));
+                }
+            }
+
+            if($instance) {
+                foreach($functions AS $function) {
+                    if(isset($functions_roleids[$function])) {
+                        $plugin->enrol_user($instance, $userid, $functions_roleids[$function], 0, 0, ENROL_USER_ACTIVE);
                     }
-                    $enrol->enrol_user($instance, $userid, $roleid, 0, 0, ENROL_USER_ACTIVE);
                 }
             }
         }
@@ -159,13 +193,18 @@ class authorization {
     private static function check_student_permission($user, $access_key) {
         global $DB, $SESSION;
 
+        $SESSION->exam_user_functions = array();
+        $SESSION->exam_user_courses = array();
+
         if (!$rec_key = $DB->get_record('exam_access_keys', array('access_key'=>$access_key))) {
             self::add_to_log($access_key, $user->id, 'access_key_unknown');
-            self::print_error('access_key_unknown');
+            self::error('access_key_unknown');
+            return;
         }
         if ($rec_key->timecreated + $rec_key->timeout*60 < time()) {
             self::add_to_log($access_key, $user->id, 'access_key_timedout');
-            self::print_error('access_key_timedout');
+            self::error('access_key_timedout');
+            return;
         }
 
         try {
@@ -176,7 +215,8 @@ class authorization {
             self::check_client_host($rec_key);
         } catch(\Exception $e) {
             self::add_to_log($access_key, $user->id, $e->getMessage());
-            self::print_error($e->getMessage());
+            self::error($e->getMessage());
+            return;
         }
 
         $course = $DB->get_record('course', array('id'=>$rec_key->courseid), 'id, shortname, visible');
@@ -185,26 +225,26 @@ class authorization {
             if($remote_course = self::get_remote_course($user->username, $identifier, $shortname)) {
                 if(!in_array('student', $remote_course->functions)) {
                     self::add_to_log($access_key, $user->id, 'no_student_permission');
-                    self::print_error('no_student_permission');
+                    self::error('no_student_permission');
                 } else if(count($remote_course->functions) > 1) {
                     self::add_to_log($access_key, $user->id, 'more_than_student_permission');
-                    self::print_error('more_than_student_permission');
+                    self::error('more_than_student_permission');
                 } else {
-                    self::add_to_log($access_key, $user->id, 'ok');
-                    $SESSION->exam_user_functions = array('student');
-                    $SESSION->exam_user_courseids = array('student'=>array($course->id));
+                    self::add_to_log($access_key, $user->id, 'ok', self::get_sessionid($user->id));
+                    $SESSION->exam_user_courses[$course->id][] = 'student';
+                    $SESSION->exam_user_functions['student'] = true;
                 }
             } else {
                 self::add_to_log($access_key, $user->id, 'no_student_permission');
-                self::print_error('no_student_permission');
+                self::error('no_student_permission');
             }
         } else {
             self::add_to_log($access_key, $user->id, 'course_not_avaliable');
-            self::print_error('course_not_avaliable');
+            self::error('course_not_avaliable');
         }
     }
 
-    private static function add_to_log($access_key, $userid, $info='') {
+    private static function add_to_log($access_key, $userid, $info='', $sessionid=0) {
         global $DB;
 
         $rec = new \stdClass();
@@ -213,6 +253,8 @@ class authorization {
         $rec->ip = $_SERVER["REMOTE_ADDR"];
         $rec->time = time();
         $rec->info = $info;
+        $rec->sessionid = $sessionid;
+
         if(isset($_SERVER["HTTP_MOODLE_PROVAS_VERSION"]) ) {
             $rec->header_version = $_SERVER["HTTP_MOODLE_PROVAS_VERSION"];
         } else {
@@ -232,45 +274,50 @@ class authorization {
         $DB->insert_record('exam_access_keys_log', $rec);
     }
 
-    private static function calculate_functions($username) {
+    private static function calculate_user_functions($username) {
         global $DB, $SESSION;
+
+        if($SESSION->exam_taking_exam) {
+            return;
+        }
+
+        $SESSION->exam_user_functions = array();
+        $SESSION->exam_user_courses = array();
 
         $remote_courses = self::get_remote_courses($username);
 
         $ip_range_editor_ok = self::check_ip_range_editor(false);
-        $user_functions = array();
-        $user_courses = array();
+        $out_of_editor_ip_range = false;
         foreach($remote_courses AS $identifier=>$rcourses) {
             foreach($rcourses AS $rcourse) {
-                foreach($rcourse->functions AS $f) {
-                    $user_functions[$f] = true;
+                foreach($rcourse->functions AS $function) {
+                    if($function != 'student') {
+                        $SESSION->exam_user_functions[$function] = true;
+                    }
                 }
+
                 $shortname = "{$identifier}_{$rcourse->shortname}";
                 if($courseid = $DB->get_field('course', 'id', array('shortname'=>$shortname))) {
-                    foreach($rcourse->functions AS $f) {
-                        if($f == 'editor') {
+                    foreach($rcourse->functions AS $function) {
+                        if($function == 'editor') {
                             if($ip_range_editor_ok) {
-                                $user_courses[$f][] = $courseid;
+                                $SESSION->exam_user_courses[$courseid][] = $function;
+                            } else {
+                                $out_of_editor_ip_range = true;
                             }
-                        } else if($f != 'student') {
-                            $user_courses[$f][] = $courseid;
+                        } else if($function != 'student') {
+                            $SESSION->exam_user_courses[$courseid][] = $function;
                         }
                     }
                 }
             }
         }
-
-        if(isset($user_functions['student'])) {
-            unset($user_functions['student']);
+        if($out_of_editor_ip_range) {
+            self::warning('out_of_editor_ip_range');
         }
-
-        $SESSION->exam_user_functions = array_keys($user_functions);
-        $SESSION->exam_user_courseids = $user_courses;
-        $SESSION->exam_user_mayedit = $ip_range_editor_ok;
     }
 
     // ========================================================================================
-    // Private functions
 
     public static function get_remote_courses($username, $identifier='') {
         global $DB;
@@ -281,7 +328,6 @@ class authorization {
         $moodles = empty($identifier) ? self::get_moodles() : array(self::get_moodle($identifier));
 
         $courses = array();
-        self::$errors = array();
         foreach($moodles AS $m) {
             $courses[$m->identifier] = array();
             try {
@@ -292,7 +338,7 @@ class authorization {
                     }
                 }
             } catch (\Exception $e) {
-                self::$errors[$m->identifier] = $e->getMessage();
+                add_to_log(0, 'exam', 'get_remote_courses', 'login/index.php', "username={$username};moodle={$m->identifier};".$e->getMessage());
             }
         }
         return $courses;
@@ -324,7 +370,7 @@ class authorization {
         global $DB;
 
         if(self::$moodles == null) {
-            self::$moodles = $DB->get_records('exam_authorization', null, null, 'identifier, description, url, token');
+            self::$moodles = $DB->get_records('exam_authorization', array('enable'=>1), null, 'identifier, description, url, token');
         }
 
         return self::$moodles;
@@ -401,7 +447,7 @@ class authorization {
 
     public static function check_version_header() {
         if(self::is_header_check_disabled()) {
-            return true;
+            return;
         }
 
         $version = self::$config->header_version;
@@ -418,14 +464,13 @@ class authorization {
                 throw new \Exception('browser_old_version');
             }
         }
-        return true;
     }
 
     public static function check_ip_header() {
         global $_SERVER;
 
         if(self::is_header_check_disabled()) {
-            return true;
+            return;
         }
 
         if(!isset($_SERVER["HTTP_MOODLE_PROVAS_IP"]) ) {
@@ -435,14 +480,13 @@ class authorization {
         if(!filter_var($_SERVER["HTTP_MOODLE_PROVAS_IP"], FILTER_VALIDATE_IP) || empty($oct[0]) || empty($oct[3])) {
             throw new \Exception('browser_invalid_ip_header');
         }
-        return true;
     }
 
     public static function check_network_header() {
         global $_SERVER;
 
         if(self::is_header_check_disabled()) {
-            return true;
+            return;
         }
 
         $netmask_octet_pattern = "[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]";
@@ -455,30 +499,19 @@ class authorization {
         if(!preg_match($pattern, $_SERVER['HTTP_MOODLE_PROVAS_NETWORK'])) {
             throw new \Exception('browser_invalid_network_header');
         }
-        return true;
     }
 
-    public static function check_ip_range_student() {
+    public static function check_ip_range_student($throw_exception=true) {
         self::load_config();
-        try {
-            self::check_ip_range(self::$config->ip_ranges_students);
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
+        return self::check_ip_range(self::$config->ip_ranges_students, $throw_exception);
     }
 
-    public static function check_ip_range_editor() {
+    public static function check_ip_range_editor($throw_exception=true) {
         self::load_config();
-        try {
-            self::check_ip_range(self::$config->ip_ranges_editors);
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
+        return self::check_ip_range(self::$config->ip_ranges_editors, $throw_exception);
     }
 
-    private static function check_ip_range($str_ranges='') {
+    private static function check_ip_range($str_ranges='', $throw_exception=true) {
         global $_SERVER;
 
         $str_ranges = trim($str_ranges);
@@ -489,7 +522,11 @@ class authorization {
                     return true;
                 }
             }
-            throw new \Exception('out_of_ip_ranges');
+            if($throw_exception) {
+                throw new \Exception('out_of_ip_ranges');
+            } else {
+                return false;
+            }
         }
         return true;
     }
@@ -498,7 +535,7 @@ class authorization {
         global $DB, $_SERVER;
 
         if(self::is_header_check_disabled()) {
-            return true;
+            return;
         }
 
         $timeout = self::$config->client_host_timeout;
@@ -520,7 +557,6 @@ class authorization {
                 throw new \Exception('client_host_out_of_subnet');
             }
         }
-        return true;
     }
 
     // Check if $ip belongs to $cidr
@@ -534,9 +570,95 @@ class authorization {
         return ($ip_ip_net == $ip_net);
     }
 
-    public static function print_error($errorcode, $print_error=true) {
+    private static function error($error_code, $param=null) {
+        global $SESSION;
+
+        if(!isset($SESSION->exam_messages)) {
+            $SESSION->exam_messages = array();
+        }
+        $SESSION->exam_messages['errors'][$error_code] = get_string($error_code, 'local_exam_authorization', $param);
+    }
+
+    private static function warning($warning_code, $param=null) {
+        global $SESSION;
+
+        if(!isset($SESSION->exam_messages)) {
+            $SESSION->exam_messages = array();
+        }
+        $SESSION->exam_messages['warnings'][$warning_code] = get_string($warning_code, 'local_exam_authorization', $param);
+    }
+
+    public static function number_of_active_sessions($userid) {
+        return count(self::get_sessions($userid));
+    }
+
+    public static function delete_other_sessions($userid) {
         global $DB;
 
+        $sessions = self::get_sessions($userid);
+        if(count($sessions) <= 1) {
+            return;
+        }
+
+        array_pop($sessions);
+        foreach($sessions AS $id=>$session) {
+            $DB->delete_records('sessions', array('id'=>$id));
+        }
+
+        if(count($sessions) == 1) {
+            self::warning('session_removed', count($sessions));
+        } else {
+            self::warning('sessions_removed', count($sessions));
+        }
+    }
+
+    public static function get_sessionid($userid) {
+        $sessions = self::get_sessions($userid);
+        if(count($sessions) == 0) {
+            return 0;
+        }
+        $session = array_pop($sessions);
+        return $session->id;
+    }
+
+    private static function get_sessions($userid) {
+        global $CFG, $DB;
+
+        // configured session handler class other than database
+        if(isset($CFG->session_handler_class) && $CFG->session_handler_class != '\core\session\database') {
+            return array();
+        }
+
+        // not configured session handler class neither dbsessions
+        if(!isset($CFG->session_handler_class) && !$CFG->dbsessions) {
+            return array();
+        }
+
+        // using database session handler
+        return $DB->get_records('sessions', array('userid'=>$userid), 'timemodified', 'id, state, sid, timemodified, firstip, lastip');
+    }
+
+    private static function has_student_active_sessions($userid) {
+        global $CFG, $DB;
+
+        // configured session handler class other than database
+        if(isset($CFG->session_handler_class) && $CFG->session_handler_class != '\core\session\database') {
+            return false;
+        }
+
+        // not configured session handler class neither dbsessions
+        if(!isset($CFG->session_handler_class) && !$CFG->dbsessions) {
+            return false;
+        }
+
+        $sql = "SELECT 1
+                  FROM {sessions} s
+                  JOIN {exam_access_keys_log} l ON (l.userid = s.userid AND l.sessionid = s.id)
+                 WHERE l.userid = :userid";
+        return $DB->record_exists_sql($sql, array('userid'=>$userid));
+    }
+
+    public static function print_error($errorcode, $print_error=true) {
         if($print_error) {
             $user = guest_user();
             \core\session\manager::set_user($user);
@@ -545,4 +667,5 @@ class authorization {
             return false;
         }
     }
+
 }

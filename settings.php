@@ -99,15 +99,30 @@ if ($hassiteconfig && isset($ADMIN)) {
     $table->data = array();
     $configs = $DB->get_records('exam_authorization');
     foreach($configs AS $cfg) {
-        $line = array($cfg->identifier, $cfg->description, $cfg->url, $cfg->token);
+        if($cfg->enable) {
+            $line = array($cfg->identifier, $cfg->description, $cfg->url, $cfg->token);
+        } else {
+            $line = array();
+            $line[] = html_writer::tag('span', $cfg->identifier, array('class'=>'dimmed_text'));
+            $line[] = html_writer::tag('span', $cfg->description, array('class'=>'dimmed_text'));
+            $line[] = html_writer::tag('span', $cfg->url, array('class'=>'dimmed_text'));
+            $line[] = html_writer::tag('span', $cfg->token, array('class'=>'dimmed_text'));
+        }
 
         $buttons = array();
         if(!$DB->record_exists_sql("SELECT 1 FROM {course} WHERE shortname LIKE '{$cfg->identifier}_%'")) {
-            $buttons[] = html_writer::link(new moodle_url('/local/exam_authorization/edit.php', array('id'=>$cfg->id, 'delete'=>1)),
+            $buttons[] = html_writer::link(new moodle_url('/local/exam_authorization/edit.php', array('id'=>$cfg->id, 'action'=>'delete')),
                 html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('t/delete'), 'alt'=>get_string('delete'), 'title'=>get_string('delete'), 'class'=>'iconsmall')));
         }
         $buttons[] = html_writer::link(new moodle_url('/local/exam_authorization/edit.php', array('id'=>$cfg->id)),
             html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('t/edit'), 'alt'=>get_string('edit'), 'title'=>get_string('edit'), 'class'=>'iconsmall')));
+        if($cfg->enable) {
+            $buttons[] = html_writer::link(new moodle_url('/local/exam_authorization/edit.php', array('id'=>$cfg->id, 'action'=>'disable')),
+                html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('t/show'), 'alt'=>get_string('disable'), 'title'=>get_string('disable'), 'class'=>'iconsmall')));
+        } else {
+            $buttons[] = html_writer::link(new moodle_url('/local/exam_authorization/edit.php', array('id'=>$cfg->id, 'action'=>'enable')),
+                html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('t/hide'), 'alt'=>get_string('enable'), 'title'=>get_string('enable'), 'class'=>'iconsmall')));
+        }
         $line[] = implode(' ', $buttons);
 
         $table->data[] = $line;

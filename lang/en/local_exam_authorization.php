@@ -81,7 +81,10 @@ $string['no_student_permission'] = 'Este computador está liberado para realiza�
 $string['more_than_student_permission'] = 'Este computador está liberado para realização de provas, porém você tem outros papeis além de estudante
     curso Moodle correspondente à chave de acesso utilizada para liberá-lo.';
 $string['course_not_avaliable'] = 'Curso Moodle correspondente à chave de acesso informada inexistente ou indisponível.';
-$string['out_of_ip_ranges'] = 'Operação não permitida a partir deste computador em função de restrição de números IP';
+$string['out_of_ip_ranges'] = 'Operação não permitida a partir deste computador em função de restrição de números IP.';
+$string['out_of_editor_ip_range'] = 'Operação de disponibilização e edição de cursos (incluindo elaboração de provas) não permitida a partir
+    deste computador em função de restrição de números IP definida pelo administrador na configuração do Moodle Provas. Em caso de dúvidas,
+    por favor contate o administrador do Moodle Provas.';
 
 $string['proctor_roleid'] = 'Papel para responsáveis';
 $string['proctor_roleid_descr'] = 'Papel com os quais os responsáveis por aplicar provas são inscritos nos cursos Moodle.';
@@ -95,3 +98,7 @@ $string['update_password_descr'] = 'Atualizar senhas de estudantes (apenas para 
 $string['browser_no_version_header'] = 'Não foi possível validar a versão do CD de Provas.';
 $string['browser_invalid_version_header'] = 'Versão inválida do CD de Provas.';
 $string['browser_old_version'] = 'Versão antiga do CD de Provas.';
+
+$string['has_student_session'] = 'Por questões de segurança só pode haver uma sessão ativa de um mesmo usuário no Moodle Provas. Como foi detectada a existência de uma sessão que está sendo utilizada para realização de prova, seu acesso foi bloqueado até o encerramento da prova ou que expire o tempo de vida dessa sessão.';
+$string['session_removed'] = 'Por questões de segurança só pode haver uma sessão ativa de um mesmo usuário no Moodle Provas. Desta forma, foi removida \'{$a}\' outra sessão que estava ativa em seu nome.';
+$string['sessions_removed'] = 'Por questões de segurança só pode haver uma sessão ativa de um mesmo usuário no Moodle Provas. Desta forma, foram removidas \'{$a}\' sessões que estavam ativas em seu nome.';
