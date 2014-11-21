@@ -600,62 +600,44 @@ class authorization {
             return;
         }
 
-        array_pop($sessions);
-        foreach($sessions AS $id=>$session) {
-            $DB->delete_records('sessions', array('id'=>$id));
+        foreach ($sessions as $id => $session) {
+            if ($session->sid != session_id()) {
+                $DB->delete_records('sessions', array('id' => $id));
+                \core\session\manager::kill_session($session->sid);
+            }
         }
 
-        if(count($sessions) == 1) {
-            self::warning('session_removed', count($sessions));
+        if (count($sessions) == 2) {
+            self::warning('session_removed', count($sessions) - 1);
         } else {
-            self::warning('sessions_removed', count($sessions));
+            self::warning('sessions_removed', count($sessions) - 1);
         }
     }
 
     public static function get_sessionid($userid) {
         $sessions = self::get_sessions($userid);
-        if(count($sessions) == 0) {
-            return 0;
+        foreach ($sessions AS $id=>$session) {
+            if ($session->sid == session_id()) {
+                return $session->id;
+            }
         }
-        $session = array_pop($sessions);
-        return $session->id;
+        return 0;
     }
 
     private static function get_sessions($userid) {
-        global $CFG, $DB;
+        global $DB;
 
-        // configured session handler class other than database
-        if(isset($CFG->session_handler_class) && $CFG->session_handler_class != '\core\session\database') {
-            return array();
-        }
-
-        // not configured session handler class neither dbsessions
-        if(!isset($CFG->session_handler_class) && !$CFG->dbsessions) {
-            return array();
-        }
-
-        // using database session handler
-        return $DB->get_records('sessions', array('userid'=>$userid), 'timemodified', 'id, state, sid, timemodified, firstip, lastip');
+        return $DB->get_records('sessions', array('userid'=>$userid), null, 'id, state, sid, timemodified, firstip, lastip');
     }
 
     private static function has_student_active_sessions($userid) {
-        global $CFG, $DB;
-
-        // configured session handler class other than database
-        if(isset($CFG->session_handler_class) && $CFG->session_handler_class != '\core\session\database') {
-            return false;
-        }
-
-        // not configured session handler class neither dbsessions
-        if(!isset($CFG->session_handler_class) && !$CFG->dbsessions) {
-            return false;
-        }
+        global $DB;
 
         $sql = "SELECT 1
                   FROM {sessions} s
                   JOIN {exam_access_keys_log} l ON (l.userid = s.userid AND l.sessionid = s.id)
                  WHERE l.userid = :userid";
-        return $DB->record_exists_sql($sql, array('userid'=>$userid));
+        return $DB->record_exists_sql($sql, array('userid' => $userid));
     }
 
     public static function print_error($errorcode, $print_error=true) {
@@ -667,5 +649,4 @@ class authorization {
             return false;
         }
     }
-
 }
