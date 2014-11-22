@@ -42,7 +42,7 @@ class authorization {
 
     // process the user_loggedin event
     public static function user_loggedin(\core\event\user_loggedin $event) {
-        if(is_siteadmin($event->userid) || isguestuser($event->userid)) {
+        if (is_siteadmin($event->userid) || isguestuser($event->userid)) {
             return true;
         }
 
@@ -60,7 +60,7 @@ class authorization {
     public static function review_permissions($user) {
         global $SESSION;
 
-        if(isset($SESSION->exam_taking_exam) && $SESSION->exam_taking_exam) {
+        if (isset($SESSION->exam_taking_exam) && $SESSION->exam_taking_exam) {
             return;
         }
 
@@ -72,11 +72,11 @@ class authorization {
     // returns true or false reflection the case or a message (string)if any exception occurs
     public static function has_function_except_student($username) {
         $ws_function = 'local_exam_remote_has_exam_capability';
-        $params = array('username'=>$username);
+        $params = array('username' => $username);
 
-        foreach(self::get_moodles() AS $m) {
+        foreach (self::get_moodles() AS $m) {
             try {
-                if(self::call_remote_function($m->identifier, $ws_function, $params)) {
+                if (self::call_remote_function($m->identifier, $ws_function, $params)) {
                     return true;
                 }
             } catch (\Exception $e) {
@@ -95,7 +95,7 @@ class authorization {
             unset($SESSION->exam_access_key);
 
             $num_sessions = self::number_of_active_sessions($user->id);
-            if($num_sessions > 1) {
+            if ($num_sessions > 1) {
                 self::add_to_log($access_key, $user->id, 'more_than_one_session');
                 self::delete_other_sessions($user->id);
             }
@@ -103,8 +103,8 @@ class authorization {
             $SESSION->exam_taking_exam = true;
             self::check_student_permission($user, $access_key);
         } else {
-            if(self::number_of_active_sessions($user->id) > 1) {
-                if(self::has_student_active_sessions($user->id)) {
+            if (self::number_of_active_sessions($user->id) > 1) {
+                if (self::has_student_active_sessions($user->id)) {
                     self::print_error('has_student_session');
                 } else {
                     self::delete_other_sessions($user->id);
@@ -119,7 +119,7 @@ class authorization {
     private static function sync_enrols($userid) {
         global $DB, $SESSION;
 
-        if(!isset($SESSION->exam_user_courses)) {
+        if (!isset($SESSION->exam_user_courses)) {
             return;
         }
 
@@ -132,28 +132,28 @@ class authorization {
 
         // identify the roleids
         $functions_roleids = array();
-        if(!empty(self::$config->proctor_roleid) && $DB->record_exists('role', array('id'=>self::$config->proctor_roleid))) {
+        if (!empty(self::$config->proctor_roleid) && $DB->record_exists('role', array('id' => self::$config->proctor_roleid))) {
             $functions_roleids['proctor'] = self::$config->proctor_roleid;
         }
-        if(!empty(self::$config->monitor_roleid) && $DB->record_exists('role', array('id'=>self::$config->monitor_roleid))) {
+        if (!empty(self::$config->monitor_roleid) && $DB->record_exists('role', array('id' => self::$config->monitor_roleid))) {
             $functions_roleids['monitor'] = self::$config->monitor_roleid;
         }
-        $functions_roleids['student'] = $DB->get_field('role', 'id', array('shortname'=>'student'), MUST_EXIST);
-        $functions_roleids['editor'] = $DB->get_field('role', 'id', array('shortname'=>'editingteacher'), MUST_EXIST);
+        $functions_roleids['student'] = $DB->get_field('role', 'id', array('shortname' => 'student'), MUST_EXIST);
+        $functions_roleids['editor'] = $DB->get_field('role', 'id', array('shortname' => 'editingteacher'), MUST_EXIST);
 
         $roleids_functions = array_flip($functions_roleids);
 
         // suspend/role_unassign all unnecessary user enrolments
-        $ues = $DB->get_records('user_enrolments', array('userid'=>$userid));
-        foreach($ues AS $ue) {
-            if($enrol = $DB->get_record('enrol', array('id'=>$ue->enrolid))) {
-                if(isset($SESSION->exam_user_courses[$enrol->courseid])) {
+        $ues = $DB->get_records('user_enrolments', array('userid' => $userid));
+        foreach ($ues AS $ue) {
+            if ($enrol = $DB->get_record('enrol', array('id' => $ue->enrolid))) {
+                if (isset($SESSION->exam_user_courses[$enrol->courseid])) {
                     $context = \context_course::instance($enrol->courseid, MUST_EXIST);
-                    $ras = $DB->get_records('role_assignments', array('contextid'=>$context->id, 'userid'=>$userid));
-                    foreach($ras as $ra) {
-                        if(isset($roleids_functions[$ra->roleid])) {
+                    $ras = $DB->get_records('role_assignments', array('contextid' => $context->id, 'userid' => $userid));
+                    foreach ($ras as $ra) {
+                        if (isset($roleids_functions[$ra->roleid])) {
                             $func = $roleids_functions[$ra->roleid];
-                            if(!in_array($func, $SESSION->exam_user_courses[$enrol->courseid])) {
+                            if (!in_array($func, $SESSION->exam_user_courses[$enrol->courseid])) {
                                 role_unassign($ra->roleid, $userid, $context->id);
                             }
                         } else {
@@ -167,22 +167,22 @@ class authorization {
         }
 
         // activate only the necessary enrolments
-        foreach($SESSION->exam_user_courses AS $courseid=>$functions) {
-            $instances = $DB->get_records('enrol', array('enrol'=>'manual', 'courseid'=>$courseid), 'id ASC');
-            if($instance = reset($instances)) {
-                if($instance->status == ENROL_INSTANCE_DISABLED) {
+        foreach ($SESSION->exam_user_courses AS $courseid => $functions) {
+            $instances = $DB->get_records('enrol', array('enrol' => 'manual', 'courseid' => $courseid), 'id ASC');
+            if ($instance = reset($instances)) {
+                if ($instance->status == ENROL_INSTANCE_DISABLED) {
                     $plugin->update_status($instance, ENROL_INSTANCE_ENABLED);
                 }
             } else {
-                if($course = $DB->get_record('course', array('id'=>$courseid))) {
+                if ($course = $DB->get_record('course', array('id' => $courseid))) {
                     $enrolid = $plugin->add_instance($course);
-                    $instance = $DB->get_record('enrol', array('id'=>$enrolid));
+                    $instance = $DB->get_record('enrol', array('id' => $enrolid));
                 }
             }
 
-            if($instance) {
-                foreach($functions AS $function) {
-                    if(isset($functions_roleids[$function])) {
+            if ($instance) {
+                foreach ($functions AS $function) {
+                    if (isset($functions_roleids[$function])) {
                         $plugin->enrol_user($instance, $userid, $functions_roleids[$function], 0, 0, ENROL_USER_ACTIVE);
                     }
                 }
@@ -196,7 +196,7 @@ class authorization {
         $SESSION->exam_user_functions = array();
         $SESSION->exam_user_courses = array();
 
-        if (!$rec_key = $DB->get_record('exam_access_keys', array('access_key'=>$access_key))) {
+        if (!$rec_key = $DB->get_record('exam_access_keys', array('access_key' => $access_key))) {
             self::add_to_log($access_key, $user->id, 'access_key_unknown');
             self::error('access_key_unknown');
             return;
@@ -219,14 +219,14 @@ class authorization {
             return;
         }
 
-        $course = $DB->get_record('course', array('id'=>$rec_key->courseid), 'id, shortname, visible');
-        if($course && $course->visible) {
+        $course = $DB->get_record('course', array('id' => $rec_key->courseid), 'id, shortname, visible');
+        if ($course && $course->visible) {
             list($identifier, $shortname) = explode('_', $course->shortname, 2);
-            if($remote_course = self::get_remote_course($user->username, $identifier, $shortname)) {
-                if(!in_array('student', $remote_course->functions)) {
+            if ($remote_course = self::get_remote_course($user->username, $identifier, $shortname)) {
+                if (!in_array('student', $remote_course->functions)) {
                     self::add_to_log($access_key, $user->id, 'no_student_permission');
                     self::error('no_student_permission');
-                } else if(count($remote_course->functions) > 1) {
+                } else if (count($remote_course->functions) > 1) {
                     self::add_to_log($access_key, $user->id, 'more_than_student_permission');
                     self::error('more_than_student_permission');
                 } else {
@@ -255,17 +255,17 @@ class authorization {
         $rec->info = $info;
         $rec->sessionid = $sessionid;
 
-        if(isset($_SERVER["HTTP_MOODLE_PROVAS_VERSION"]) ) {
+        if (isset($_SERVER["HTTP_MOODLE_PROVAS_VERSION"]) ) {
             $rec->header_version = $_SERVER["HTTP_MOODLE_PROVAS_VERSION"];
         } else {
             $rec->header_version = '';
         }
-        if(isset($_SERVER["HTTP_MOODLE_PROVAS_IP"]) ) {
+        if (isset($_SERVER["HTTP_MOODLE_PROVAS_IP"]) ) {
             $rec->header_ip = $_SERVER["HTTP_MOODLE_PROVAS_IP"];
         } else {
             $rec->header_ip = '';
         }
-        if(isset($_SERVER["HTTP_MOODLE_PROVAS_NETWORK"]) ) {
+        if (isset($_SERVER["HTTP_MOODLE_PROVAS_NETWORK"]) ) {
             $rec->header_network = $_SERVER["HTTP_MOODLE_PROVAS_NETWORK"];
         } else {
             $rec->header_network = '';
@@ -277,7 +277,7 @@ class authorization {
     private static function calculate_user_functions($username) {
         global $DB, $SESSION;
 
-        if($SESSION->exam_taking_exam) {
+        if ($SESSION->exam_taking_exam) {
             return;
         }
 
@@ -288,31 +288,31 @@ class authorization {
 
         $ip_range_editor_ok = self::check_ip_range_editor(false);
         $out_of_editor_ip_range = false;
-        foreach($remote_courses AS $identifier=>$rcourses) {
-            foreach($rcourses AS $rcourse) {
-                foreach($rcourse->functions AS $function) {
-                    if($function != 'student') {
+        foreach ($remote_courses AS $identifier => $rcourses) {
+            foreach ($rcourses AS $rcourse) {
+                foreach ($rcourse->functions AS $function) {
+                    if ($function != 'student') {
                         $SESSION->exam_user_functions[$function] = true;
                     }
                 }
 
                 $shortname = "{$identifier}_{$rcourse->shortname}";
-                if($courseid = $DB->get_field('course', 'id', array('shortname'=>$shortname))) {
-                    foreach($rcourse->functions AS $function) {
-                        if($function == 'editor') {
-                            if($ip_range_editor_ok) {
+                if ($courseid = $DB->get_field('course', 'id', array('shortname' => $shortname))) {
+                    foreach ($rcourse->functions AS $function) {
+                        if ($function == 'editor') {
+                            if ($ip_range_editor_ok) {
                                 $SESSION->exam_user_courses[$courseid][] = $function;
                             } else {
                                 $out_of_editor_ip_range = true;
                             }
-                        } else if($function != 'student') {
+                        } else if ($function != 'student') {
                             $SESSION->exam_user_courses[$courseid][] = $function;
                         }
                     }
                 }
             }
         }
-        if($out_of_editor_ip_range) {
+        if ($out_of_editor_ip_range) {
             self::warning('out_of_editor_ip_range');
         }
     }
@@ -323,17 +323,17 @@ class authorization {
         global $DB;
 
         $ws_function = 'local_exam_remote_get_user_courses';
-        $params = array('username'=>$username);
+        $params = array('username' => $username);
 
         $moodles = empty($identifier) ? self::get_moodles() : array(self::get_moodle($identifier));
 
         $courses = array();
-        foreach($moodles AS $m) {
+        foreach ($moodles AS $m) {
             $courses[$m->identifier] = array();
             try {
                 $response = self::call_remote_function($m->identifier, $ws_function, $params);
-                if(is_array($response) ) {
-                    foreach($response AS $course) {
+                if (is_array($response) ) {
+                    foreach ($response AS $course) {
                         $courses[$m->identifier][$course->shortname] = $course;
                     }
                 }
@@ -346,8 +346,8 @@ class authorization {
 
     public static function get_remote_course($username, $identifier, $shortname) {
         $courses = self::get_remote_courses($username, $identifier);
-        foreach($courses[$identifier] AS $c) {
-            if($c->shortname == $shortname) {
+        foreach ($courses[$identifier] AS $c) {
+            if ($c->shortname == $shortname) {
                 return $c;
             }
         }
@@ -359,7 +359,7 @@ class authorization {
 
     public static function get_moodle($identifier) {
         self::get_moodles();
-        if(isset(self::$moodles[$identifier])) {
+        if (isset(self::$moodles[$identifier])) {
             return self::$moodles[$identifier];
         } else {
             return false;
@@ -369,8 +369,8 @@ class authorization {
     public static function get_moodles() {
         global $DB;
 
-        if(self::$moodles == null) {
-            self::$moodles = $DB->get_records('exam_authorization', array('enable'=>1), null, 'identifier, description, url, token');
+        if (self::$moodles == null) {
+            self::$moodles = $DB->get_records('exam_authorization', array('enable' => 1), null, 'identifier, description, url, token');
         }
 
         return self::$moodles;
@@ -379,33 +379,33 @@ class authorization {
     public static function call_remote_function($identifier, $ws_function, $params) {
         global $DB;
 
-        if(!$moodle = self::get_moodle($identifier)) {
+        if (!$moodle = self::get_moodle($identifier)) {
             throw new \Exception(get_string('unknown_identifier', 'local_exam_authorization', $identifier));
         }
 
         $curl = new \curl;
-        $curl->setopt(array('CURLOPT_SSL_VERIFYHOST'=>0, 'CURLOPT_SSL_VERIFYPEER'=>0));
+        $curl->setopt(array('CURLOPT_SSL_VERIFYHOST' => 0, 'CURLOPT_SSL_VERIFYPEER' => 0));
         $serverurl = "{$moodle->url}/webservice/rest/server.php?wstoken={$moodle->token}&wsfunction={$ws_function}&moodlewsrestformat=json";
 
         // formating (not recursive) an array in POST parameter.
         // We try to use 'format_array_postdata_for_curlcall' from filelib.php, but there's some troubles with stored_files
-        foreach($params AS $key=>$value) {
-            if(is_array($value)) {
+        foreach ($params AS $key => $value) {
+            if (is_array($value)) {
                 unset($params[$key]);
-                foreach($value AS $i=>$v) {
+                foreach ($value AS $i => $v) {
                     $params[$key.'['.$i.']'] = $v;
                 }
             }
         }
 
         $result = json_decode($curl->post($serverurl, $params));
-        if(is_object($result) && isset($result->exception)) {
-            if($result->exception == 'webservice_access_exception') {
+        if (is_object($result) && isset($result->exception)) {
+            if ($result->exception == 'webservice_access_exception') {
                 throw new \Exception($result->message . ': ' . $result->debuginfo);
             } else {
                 throw new \Exception($result->message);
             }
-        } else if(is_null($result)) {
+        } else if (is_null($result)) {
             throw new \Exception(get_string('return_null', 'local_exam_authorization', $moodle->description));
         }
         return $result;
@@ -414,101 +414,142 @@ class authorization {
     // ------------------------------------------------------------------------------------------
 
     private static function load_config() {
-        if(self::$config == null) {
+        if (self::$config == null) {
             self::$config = get_config('local_exam_authorization');
-            if(!isset(self::$config->disable_header_check)) {
+            if (!isset(self::$config->disable_header_check)) {
                 self::$config->disable_header_check = false;
             }
-            if(!isset(self::$config->header_version)) {
+            if (!isset(self::$config->header_version)) {
                 self::print_error('not_configured');
             }
-            if(!isset(self::$config->client_host_timeout)) {
+            if (!isset(self::$config->client_host_timeout)) {
                 self::$config->client_host_timeout = '10';
             }
-            if(!isset(self::$config->ip_ranges_editors)) {
+            if (!isset(self::$config->ip_ranges_editors)) {
                 self::$config->ip_ranges_editors = '';
             }
-            if(!isset(self::$config->ip_ranges_students)) {
+            if (!isset(self::$config->ip_ranges_students)) {
                 self::$config->ip_ranges_students = '';
             }
-            if(!isset(self::$config->proctor_roleid)) {
+            if (!isset(self::$config->proctor_roleid)) {
                 self::$config->proctor_roleid = 0;
             }
-            if(!isset(self::$config->monitor_roleid)) {
+            if (!isset(self::$config->monitor_roleid)) {
                 self::$config->monitor_roleid = 0;
+            }
+            if (!isset(self::$config->auth_plugin)) {
+                self::$config->auth_plugin = '';
             }
         }
     }
 
-    public static function is_header_check_disabled() {
+    public static function get_config($key) {
         self::load_config();
-        return self::$config->disable_header_check;
+        if (isset(self::$config->$key)) {
+            return self::$config->$key;
+        } else {
+            return false;
+        }
     }
 
-    public static function check_version_header() {
-        if(self::is_header_check_disabled()) {
-            return;
+    public static function is_header_check_disabled() {
+        return self::get_config('disable_header_check');
+    }
+
+    public static function check_version_header($throw_exception=true) {
+        if (self::is_header_check_disabled()) {
+            return true;
         }
 
         $version = self::$config->header_version;
         $pattern = '/^[0-9]+\.[0-9]+$/';
 
-        if(! isset($_SERVER["HTTP_MOODLE_PROVAS_VERSION"]) ) {
-            throw new \Exception('browser_no_version_header');
-        }
-        if(!preg_match($pattern, $_SERVER['HTTP_MOODLE_PROVAS_VERSION'])) {
-            throw new \Exception('browser_invalid_version_header');
-        }
-        if (!empty($version)) {
-            if ($_SERVER["HTTP_MOODLE_PROVAS_VERSION"] < $version) {
-                throw new \Exception('browser_old_version');
+        if (! isset($_SERVER["HTTP_MOODLE_PROVAS_VERSION"]) ) {
+            if ($throw_exception) {
+                throw new \Exception('browser_no_version_header');
+            } else {
+                return false;
             }
         }
-    }
-
-    public static function check_ip_header() {
-        global $_SERVER;
-
-        if(self::is_header_check_disabled()) {
-            return;
+        if (!preg_match($pattern, $_SERVER['HTTP_MOODLE_PROVAS_VERSION'])) {
+            if ($throw_exception) {
+                throw new \Exception('browser_invalid_version_header');
+            } else {
+                return false;
+            }
+        }
+        if (!empty($version) && $_SERVER["HTTP_MOODLE_PROVAS_VERSION"] < $version) {
+            if ($throw_exception) {
+                throw new \Exception('browser_old_version');
+            } else {
+                return false;
+            }
         }
 
-        if(!isset($_SERVER["HTTP_MOODLE_PROVAS_IP"]) ) {
-            throw new \Exception('browser_unknown_ip_header');
+        return true;
+    }
+
+    public static function check_ip_header($throw_exception=true) {
+        global $_SERVER;
+
+        if (self::is_header_check_disabled()) {
+            return true;
+        }
+
+        if (!isset($_SERVER["HTTP_MOODLE_PROVAS_IP"]) ) {
+            if ($throw_exception) {
+                throw new \Exception('browser_unknown_ip_header');
+            } else {
+                return false;
+            }
         }
         $oct = explode('.', $_SERVER["HTTP_MOODLE_PROVAS_IP"]);
-        if(!filter_var($_SERVER["HTTP_MOODLE_PROVAS_IP"], FILTER_VALIDATE_IP) || empty($oct[0]) || empty($oct[3])) {
-            throw new \Exception('browser_invalid_ip_header');
+        if (!filter_var($_SERVER["HTTP_MOODLE_PROVAS_IP"], FILTER_VALIDATE_IP) || empty($oct[0]) || empty($oct[3])) {
+            if ($throw_exception) {
+                throw new \Exception('browser_invalid_ip_header');
+            } else {
+                return false;
+            }
         }
+
+        return true;
     }
 
-    public static function check_network_header() {
+    public static function check_network_header($throw_exception=true) {
         global $_SERVER;
 
-        if(self::is_header_check_disabled()) {
-            return;
+        if (self::is_header_check_disabled()) {
+            return true;
         }
 
         $netmask_octet_pattern = "[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]";
         $netmask_pattern = "({$netmask_octet_pattern})(\.({$netmask_octet_pattern})){3}";
         $pattern = "/^{$netmask_pattern}\/[1-9][0-9]?$/";
 
-        if(! isset($_SERVER["HTTP_MOODLE_PROVAS_NETWORK"]) ) {
-            throw new \Exception('browser_unknown_network_header');
+        if (! isset($_SERVER["HTTP_MOODLE_PROVAS_NETWORK"]) ) {
+            if ($throw_exception) {
+                throw new \Exception('browser_unknown_network_header');
+            } else {
+                return false;
+            }
         }
-        if(!preg_match($pattern, $_SERVER['HTTP_MOODLE_PROVAS_NETWORK'])) {
-            throw new \Exception('browser_invalid_network_header');
+        if (!preg_match($pattern, $_SERVER['HTTP_MOODLE_PROVAS_NETWORK'])) {
+            if ($throw_exception) {
+                throw new \Exception('browser_invalid_network_header');
+            } else {
+                return false;
+            }
         }
+
+        return true;
     }
 
     public static function check_ip_range_student($throw_exception=true) {
-        self::load_config();
-        return self::check_ip_range(self::$config->ip_ranges_students, $throw_exception);
+        return self::check_ip_range(self::get_config('ip_ranges_students'), $throw_exception);
     }
 
     public static function check_ip_range_editor($throw_exception=true) {
-        self::load_config();
-        return self::check_ip_range(self::$config->ip_ranges_editors, $throw_exception);
+        return self::check_ip_range(self::get_config('ip_ranges_editors'), $throw_exception);
     }
 
     private static function check_ip_range($str_ranges='', $throw_exception=true) {
@@ -516,47 +557,62 @@ class authorization {
 
         $str_ranges = trim($str_ranges);
         $ranges = explode(';', $str_ranges);
-        if(!empty($str_ranges) && !empty($ranges)) {
-            foreach($ranges AS $range) {
+        if (!empty($str_ranges) && !empty($ranges)) {
+            foreach ($ranges AS $range) {
                 if (IPTools::ip_in_range($_SERVER['REMOTE_ADDR'], trim($range))) {
                     return true;
                 }
             }
-            if($throw_exception) {
+            if ($throw_exception) {
                 throw new \Exception('out_of_ip_ranges');
             } else {
                 return false;
             }
         }
+
         return true;
     }
 
-    public static function check_client_host($access_key) {
+    public static function check_client_host($access_key, $throw_exception=true) {
         global $DB, $_SERVER;
 
-        if(self::is_header_check_disabled()) {
-            return;
+        if (self::is_header_check_disabled()) {
+            return true;
         }
 
-        $timeout = self::$config->client_host_timeout;
+        $timeout = self::$get_config('client_host_timeout');
 
-        if(!empty($access_key->verify_client_host) && !empty($timeout)) {
+        if (!empty($access_key->verify_client_host) && !empty($timeout)) {
             $sql = "SELECT *
                       FROM {exam_client_hosts}
                      WHERE real_ip = '{$_SERVER['REMOTE_ADDR']}'
                   ORDER BY timemodified DESC
                      LIMIT 1";
-            if(!$client = $DB->get_record_sql($sql)) {
-                throw new \Exception('unknow_client_host');
+            if (!$client = $DB->get_record_sql($sql)) {
+                if ($throw_exception) {
+                    throw new \Exception('unknow_client_host');
+                } else {
+                    return false;
+                }
             }
             if ($client->timemodified + $timeout * 60 < time()) {
-                throw new \Exception('client_host_timeout');
+                if ($throw_exception) {
+                    throw new \Exception('client_host_timeout');
+                } else {
+                    return false;
+                }
             }
 
-            if($access_key->ip != $client->real_ip && !self::ipCIDRCheck($access_key->ip, $client->network)) {
-                throw new \Exception('client_host_out_of_subnet');
+            if ($access_key->ip != $client->real_ip && !self::ipCIDRCheck($access_key->ip, $client->network)) {
+                if ($throw_exception) {
+                    throw new \Exception('client_host_out_of_subnet');
+                } else {
+                    return false;
+                }
             }
         }
+
+        return true;
     }
 
     // Check if $ip belongs to $cidr
@@ -573,7 +629,7 @@ class authorization {
     private static function error($error_code, $param=null) {
         global $SESSION;
 
-        if(!isset($SESSION->exam_messages)) {
+        if (!isset($SESSION->exam_messages)) {
             $SESSION->exam_messages = array();
         }
         $SESSION->exam_messages['errors'][$error_code] = get_string($error_code, 'local_exam_authorization', $param);
@@ -582,7 +638,7 @@ class authorization {
     private static function warning($warning_code, $param=null) {
         global $SESSION;
 
-        if(!isset($SESSION->exam_messages)) {
+        if (!isset($SESSION->exam_messages)) {
             $SESSION->exam_messages = array();
         }
         $SESSION->exam_messages['warnings'][$warning_code] = get_string($warning_code, 'local_exam_authorization', $param);
@@ -596,7 +652,7 @@ class authorization {
         global $DB;
 
         $sessions = self::get_sessions($userid);
-        if(count($sessions) <= 1) {
+        if (count($sessions) <= 1) {
             return;
         }
 
@@ -616,7 +672,7 @@ class authorization {
 
     public static function get_sessionid($userid) {
         $sessions = self::get_sessions($userid);
-        foreach ($sessions AS $id=>$session) {
+        foreach ($sessions AS $id => $session) {
             if ($session->sid == session_id()) {
                 return $session->id;
             }
@@ -627,7 +683,7 @@ class authorization {
     private static function get_sessions($userid) {
         global $DB;
 
-        return $DB->get_records('sessions', array('userid'=>$userid), null, 'id, state, sid, timemodified, firstip, lastip');
+        return $DB->get_records('sessions', array('userid' => $userid), null, 'id, state, sid, timemodified, firstip, lastip');
     }
 
     private static function has_student_active_sessions($userid) {
@@ -641,10 +697,10 @@ class authorization {
     }
 
     public static function print_error($errorcode, $print_error=true) {
-        if($print_error) {
+        if ($print_error) {
             $user = guest_user();
             \core\session\manager::set_user($user);
-            redirect(new \moodle_url('/local/exam_authorization/print_error.php', array('errorcode'=>$errorcode)));
+            redirect(new \moodle_url('/local/exam_authorization/print_error.php', array('errorcode' => $errorcode)));
         } else {
             return false;
         }

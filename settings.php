@@ -81,6 +81,17 @@ if ($hassiteconfig && isset($ADMIN)) {
                             get_string('monitor_roleid_descr', 'local_exam_authorization'),
                             0, $roles_menu));
 
+    $auth_menu = array();
+    $auth_menu[''] = get_string('default_auth_plugin', 'local_exam_authorization');
+    foreach(get_enabled_auth_plugins() AS $n => $auth) {
+        $auth_menu[$auth] = $auth;
+    }
+
+    $settings->add(new admin_setting_configselect('local_exam_authorization/auth_plugin',
+                            get_string('auth_plugin', 'local_exam_authorization'),
+                            get_string('auth_plugin_descr', 'local_exam_authorization'),
+                            '', $auth_menu));
+
     $settings->add(new admin_setting_configcheckbox('local_exam_authorization/update_password',
                             get_string('update_password', 'local_exam_authorization'),
                             get_string('update_password_descr', 'local_exam_authorization'),
@@ -98,8 +109,8 @@ if ($hassiteconfig && isset($ADMIN)) {
 
     $table->data = array();
     $configs = $DB->get_records('exam_authorization');
-    foreach($configs AS $cfg) {
-        if($cfg->enable) {
+    foreach ($configs AS $cfg) {
+        if ($cfg->enable) {
             $line = array($cfg->identifier, $cfg->description, $cfg->url, $cfg->token);
         } else {
             $line = array();
@@ -110,13 +121,13 @@ if ($hassiteconfig && isset($ADMIN)) {
         }
 
         $buttons = array();
-        if(!$DB->record_exists_sql("SELECT 1 FROM {course} WHERE shortname LIKE '{$cfg->identifier}_%'")) {
+        if (!$DB->record_exists_sql("SELECT 1 FROM {course} WHERE shortname LIKE '{$cfg->identifier}_%'")) {
             $buttons[] = html_writer::link(new moodle_url('/local/exam_authorization/edit.php', array('id'=>$cfg->id, 'action'=>'delete')),
                 html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('t/delete'), 'alt'=>get_string('delete'), 'title'=>get_string('delete'), 'class'=>'iconsmall')));
         }
         $buttons[] = html_writer::link(new moodle_url('/local/exam_authorization/edit.php', array('id'=>$cfg->id)),
             html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('t/edit'), 'alt'=>get_string('edit'), 'title'=>get_string('edit'), 'class'=>'iconsmall')));
-        if($cfg->enable) {
+        if ($cfg->enable) {
             $buttons[] = html_writer::link(new moodle_url('/local/exam_authorization/edit.php', array('id'=>$cfg->id, 'action'=>'disable')),
                 html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('t/show'), 'alt'=>get_string('disable'), 'title'=>get_string('disable'), 'class'=>'iconsmall')));
         } else {

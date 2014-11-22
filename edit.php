@@ -41,7 +41,7 @@ $syscontext = context_system::instance();
 $url = new moodle_url('/local/exam_authorization/edit.php');
 $returnurl = new moodle_url('/admin/settings.php', array('section'=>'local_exam_authorization_settings'));
 
-if($id = optional_param('id', 0, PARAM_INT)) {
+if ($id = optional_param('id', 0, PARAM_INT)) {
     $moodle = $DB->get_record('exam_authorization', array('id'=>$id), '*', MUST_EXIST);
 } else {
     $moodle = new stdClass();
@@ -57,10 +57,10 @@ $action = optional_param('action', false, PARAM_TEXT);
 if ($action == 'confirmdelete' && confirm_sesskey() && $id) {
     $DB->delete_records('exam_authorization', array('id'=>$id));
     redirect($returnurl);
-} else if($action == 'enable' && $id) {
+} else if ($action == 'enable' && $id) {
     $DB->set_field('exam_authorization', 'enable', 1, array('id'=>$id));
     redirect($returnurl);
-} else if($action == 'disable' && $id) {
+} else if ($action == 'disable' && $id) {
     $DB->set_field('exam_authorization', 'enable', 0, array('id'=>$id));
     redirect($returnurl);
 }
@@ -86,7 +86,7 @@ $editform = new exam_authorization_form(null, array('data'=>$moodle));
 if ($editform->is_cancelled()) {
     redirect($returnurl);
 } else if ($data = $editform->get_data()) {
-    if($data->id) {
+    if ($data->id) {
         $data->timemodified = time();
         $DB->update_record('exam_authorization', $data);
     } else {

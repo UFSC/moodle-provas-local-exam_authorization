@@ -43,7 +43,7 @@ class exam_authorization_form extends moodleform {
         $mform->addElement('text', 'identifier', get_string('identifier', 'local_exam_authorization'), 'maxlength="20" size="20"');
         $mform->addRule('identifier', get_string('required'), 'required', null, 'client');
         $mform->setType('identifier', PARAM_TEXT);
-        if($moodle->id) {
+        if ($moodle->id) {
             $mform->freeze('identifier');
         }
 
@@ -73,16 +73,16 @@ class exam_authorization_form extends moodleform {
         $errors = parent::validation($data, $files);
 
         $split = explode(' ', $data['identifier']);
-        if(count($split) > 1) {
+        if (count($split) > 1) {
             $errors['identifier'] = get_string('invalid_identifier', 'local_exam_authorization');
         }
 
         $keys = array('identifier', 'description', 'url', 'token');
         $params = array('id'=>$data['id']);
-        foreach($keys AS $key) {
+        foreach ($keys AS $key) {
             $params[$key] = $data[$key];
             $sql = "SELECT id FROM {exam_authorization} WHERE {$key} = :{$key} AND id != :id";
-            if($DB->record_exists_sql($sql, $params)) {
+            if ($DB->record_exists_sql($sql, $params)) {
                 $errors[$key] = get_string('already_exists', 'local_exam_authorization');
             }
         }

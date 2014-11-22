@@ -32,7 +32,7 @@
 include('../../config.php');
 
 $errorcode = optional_param('errorcode', '', PARAM_TEXT);
-if(empty($errorcode)) {
+if (empty($errorcode)) {
     require_logout();
     redirect(new moodle_url('/'));
 } else {

@@ -93,7 +93,11 @@ $string['monitor_roleid_descr'] = 'Papel com os quais pessoas que monitoram prov
 
 $string['update_password'] = 'Atualizar senhas de estudantes';
 $string['update_password_descr'] = 'Atualizar senhas de estudantes (apenas para auth/manual) sempre que forem feitas ou revisadas as inscrições nos cursos.';
-
+$string['auth_plugin'] = 'Método de autenticação';
+$string['auth_plugin_descr'] = 'Método de autenticação para novos usuários que sejam cadastrados no Moodle quando sejam feitas ou revisadas as inscrições.
+    Caso seja selecionada a opção \'Método externo\', o método de autenticação preferencial é o mesmo utilizado pelo usuário no Moodle remoto.
+    Se esse método não estiver disponível e ativo localmente, será utilizado o método \'manual\'.';
+$string['default_auth_plugin'] = 'Método externo';
 
 $string['browser_no_version_header'] = 'Não foi possível validar a versão do CD de Provas.';
 $string['browser_invalid_version_header'] = 'Versão inválida do CD de Provas.';

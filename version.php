@@ -31,6 +31,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2014111900;
+$plugin->version   = 2014112200;
 $plugin->requires  = 2013111800; //Moodle 2.6
 $plugin->component = 'local_exam_authorization';
