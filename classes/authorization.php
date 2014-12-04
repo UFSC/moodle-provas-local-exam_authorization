@@ -580,7 +580,7 @@ class authorization {
             return true;
         }
 
-        $timeout = self::$get_config('client_host_timeout');
+        $timeout = self::get_config('client_host_timeout');
 
         if (!empty($access_key->verify_client_host) && !empty($timeout)) {
             $sql = "SELECT *
