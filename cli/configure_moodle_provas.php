@@ -312,7 +312,7 @@ $configs = array(
                  array('grade_displaytype', 1),
                  array('grade_decimalpoints', 1),
 
-                 array('ackup_general_comments', false, 'backup'),
+                 array('backup_general_comments', false, 'backup'),
                  array('backup_general_blocks', false, 'backup'),
                  array('backup_general_filters', false, 'backup'),
                  array('backup_general_badges', false, 'backup'),
@@ -379,7 +379,7 @@ $blocks = array(
                 'tags',
                 );
 
-echo "=> desabling message processors\n";
+echo "=> disabling message processors\n";
 $DB->set_field('message_processors', 'enabled', '0');      // Disable output
 
 echo "=> hidding some modules:\n";
