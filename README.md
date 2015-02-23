@@ -1,7 +1,7 @@
 local-exam_authorization
 ========================
 
-Módulo de autorização para realização de provas
+Plugin local para autorização para realização de provas
 
 Moodle Provas
 =============
@@ -46,16 +46,25 @@ Instalação
 ==========
 
 Este plugin deve ser instalado no "Moodle de Provas".
+Este plugin é do tipo local, logo deve ser instalado no diretório "local", na raiz do seu moodle.
+O nome diretório deste plugin dentro do diretório "local" deve ser "exam_authorization" (sem as aspas).
+Após colocar o código do plugin no diretório correto, visite o seu Moodle como administrador para finalizar a instalação.
 
 Pós-instalação
 ==============
 
-Há um script em cli/configure_moodle_provas.php que realizar diversas operações de configuração, dentre elas:
+Há um script em cli/configure_moodle_provas.php que realiza diversas operações de configuração, dentre elas:
 
 * define papeis adicionais: proctor e monitor
 * remove diversas permissões dos papeis estudante e professor;
 * oculta/desativa diversos módulos e blocos (forum, message, etc)
 * altera diversos parâmetros globais de configuração
+
+Para executar este script través da linha de comando, você vai precisar do "php-cli" (php command line interface).
+Com o php-cli instalado, você pode acessar o diretório do plugin e executar o script com os seguintes comandos:
+
+    cd moodle/local/exam_authorization
+    php cli/configure_moodle_provas.php
 
 Licença
 =======
