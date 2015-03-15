@@ -277,7 +277,7 @@ class authorization {
     private static function calculate_user_functions($username) {
         global $DB, $SESSION;
 
-        if ($SESSION->exam_taking_exam) {
+        if (isset($SESSION->exam_taking_exam) && $SESSION->exam_taking_exam) {
             return;
         }
 

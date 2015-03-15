@@ -129,10 +129,10 @@ if ($hassiteconfig && isset($ADMIN)) {
             html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('t/edit'), 'alt'=>get_string('edit'), 'title'=>get_string('edit'), 'class'=>'iconsmall')));
         if ($cfg->enable) {
             $buttons[] = html_writer::link(new moodle_url('/local/exam_authorization/edit.php', array('id'=>$cfg->id, 'action'=>'disable')),
-                html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('t/show'), 'alt'=>get_string('disable'), 'title'=>get_string('disable'), 'class'=>'iconsmall')));
+                html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('t/hide'), 'alt'=>get_string('disable'), 'title'=>get_string('disable'), 'class'=>'iconsmall')));
         } else {
             $buttons[] = html_writer::link(new moodle_url('/local/exam_authorization/edit.php', array('id'=>$cfg->id, 'action'=>'enable')),
-                html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('t/hide'), 'alt'=>get_string('enable'), 'title'=>get_string('enable'), 'class'=>'iconsmall')));
+                html_writer::empty_tag('img', array('src'=>$OUTPUT->pix_url('t/show'), 'alt'=>get_string('enable'), 'title'=>get_string('enable'), 'class'=>'iconsmall')));
         }
         $line[] = implode(' ', $buttons);
 
