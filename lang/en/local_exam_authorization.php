@@ -51,17 +51,19 @@ $string['remote_moodles'] = 'Instalações remotas de Moodle integradas ao Moodl
 $string['remote_moodle'] = 'Instalação remota de Moodle integrada ao Moodle Provas';
 
 $string['identifier'] = 'Identificador';
-$string['identifier_help'] = 'Palavra única que identifica o Moodle remoto';
+$string['identifier_help'] = 'Símbolo composto apenas por letras e dígitos numéricos, que identifica o Moodle remoto. É prefixado ao nomes curtos dos cursos Moodle de forma a identificar a qual Moodle remoto o curso originalmente pertence.';
 $string['description'] = 'Descrição do Moodle';
 $string['description_help'] = 'Frase que descreve o Moodle Remoto. Esta frase é utilizado como nome de categoria onde serão
     postos os cursos Moodle relacionados ao Moodle Remoto.';
 $string['url'] = 'URL do Moodle';
 $string['url_help'] = 'URL da instalação remota do Moodle';
 $string['token'] = 'Token';
-$string['token_help'] = 'Token do serviço web do Moodle remoto que possibilida troca de dados entre as duas implantações de Moodle';
+$string['token_help'] = 'Token do serviço web do Moodle remoto que possibilida troca de dados entre o Moodle Provas e o Moodle remoto';
 
 $string['not_configured'] = 'Módulo de Controle de Acesso ao Moodle Provas não está corretamente configurado.';
-$string['invalid_context'] = 'Deve ser uma palavra única';
+$string['invalid_identifier'] = 'Deve ser um símbolo composto apenas por letras e dígitos numéricos';
+$string['invalid_token'] = 'Deve ser um símbolo composto 32 caracteres alfanuméricos (dígitos hexadecimais).';
+$string['invalid_url'] = 'URL inválida.';
 
 $string['confirmdelete'] = 'Realmente remover a relação com a instalação remota de Moodle: \'{$a}\'?';
 $string['already_exists'] = 'Já há outro registro com este valor.';

@@ -43,6 +43,7 @@ class exam_authorization_form extends moodleform {
         $mform->addElement('text', 'identifier', get_string('identifier', 'local_exam_authorization'), 'maxlength="20" size="20"');
         $mform->addRule('identifier', get_string('required'), 'required', null, 'client');
         $mform->setType('identifier', PARAM_TEXT);
+        $mform->addHelpButton('identifier', 'identifier', 'local_exam_authorization');
         if ($moodle->id) {
             $mform->freeze('identifier');
         }
@@ -53,11 +54,13 @@ class exam_authorization_form extends moodleform {
 
         $mform->addElement('text', 'url', get_string('url', 'local_exam_authorization'), 'maxlength="254" size="50"');
         $mform->addRule('url', get_string('required'), 'required', null, 'client');
-        $mform->setType('url', PARAM_URL);
+        $mform->setType('url', PARAM_TEXT);
+        $mform->addHelpButton('url', 'url', 'local_exam_authorization');
 
         $mform->addElement('text', 'token', get_string('token', 'local_exam_authorization'), 'maxlength="128" size="50"');
         $mform->addRule('token', get_string('required'), 'required', null, 'client');
         $mform->setType('token', PARAM_TEXT);
+        $mform->addHelpButton('token', 'token', 'local_exam_authorization');
 
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
@@ -72,18 +75,25 @@ class exam_authorization_form extends moodleform {
 
         $errors = parent::validation($data, $files);
 
-        $split = explode(' ', $data['identifier']);
-        if (count($split) > 1) {
+        if (!preg_match('/^[a-zA-Z0-9]+$/', $data['identifier'])) {
             $errors['identifier'] = get_string('invalid_identifier', 'local_exam_authorization');
         }
+        if (!preg_match('/^[a-f0-9]{32}$/', $data['token'])) {
+            $errors['token'] = get_string('invalid_token', 'local_exam_authorization');
+        }
+        if (filter_var($data['url'], FILTER_VALIDATE_URL) === false) {
+            $errors['url'] = get_string('invalid_url', 'local_exam_authorization');
+        }
 
-        $keys = array('identifier', 'description', 'url', 'token');
-        $params = array('id'=>$data['id']);
-        foreach ($keys AS $key) {
-            $params[$key] = $data[$key];
-            $sql = "SELECT id FROM {exam_authorization} WHERE {$key} = :{$key} AND id != :id";
-            if ($DB->record_exists_sql($sql, $params)) {
-                $errors[$key] = get_string('already_exists', 'local_exam_authorization');
+        if(empty($errors)) {
+            $keys = array('identifier', 'description', 'url', 'token');
+            $params = array('id'=>$data['id']);
+            foreach ($keys AS $key) {
+                $params[$key] = $data[$key];
+                $sql = "SELECT id FROM {exam_authorization} WHERE {$key} = :{$key} AND id != :id";
+                if ($DB->record_exists_sql($sql, $params)) {
+                    $errors[$key] = get_string('already_exists', 'local_exam_authorization');
+                }
             }
         }
 
