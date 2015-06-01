@@ -1,5 +1,5 @@
 {
-    "name": "moodle-ufsc/local-exam_authorization",
+    "name": "moodle-provas/local-exam_authorization",
     "description": "plugin de autorização do moodle provas",
     "license": "GPLv3",
     "type": "moodle-local",
