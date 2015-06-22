@@ -1,0 +1,12 @@
+{
+    "name": "moodle-provas/local-exam_authorization",
+    "description": "plugin de autorização do moodle provas",
+    "license": "GPLv3",
+    "type": "moodle-local",
+    "require": {
+      "composer/installers": "~1.0"
+    },
+    "extra": {
+      "installer-name": "exam_authorization"
+    }
+}
