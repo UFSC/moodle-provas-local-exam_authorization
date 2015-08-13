@@ -41,11 +41,13 @@ $string['client_host_timeout_descr'] = 'Tempo máximo (em minutos) entre a últi
 $string['ip_ranges_editors'] = 'Faixas IP para elaboradores de provas';
 $string['ip_ranges_editors_descr'] = 'Faixas de restrição de endereços IP (lista separada por ;)
     a partir dos quais pessoas podem acessar o Moodle para elaborar provas. Deixe em branco para desabilitar esta verificação.
-    Ex: 10.0.\*.\*; 192.168.0.\*';
+    Pode ser utilizado o formato que inclue caracter coringa (ex: 10.0.\*.\*; 192.168.0.\*), como também o formato CIDR
+    (ex: 10.0.0.0/16; 192.168.1.0/24)';
 $string['ip_ranges_students'] = 'Faixas IP para estudantes';
 $string['ip_ranges_students_descr'] = 'Faixas de restrição de endereços IP (lista separada por ;)
     a partir dos quais estudantes podem acessar o Moodle para realizar provas. Deixe em branco para desabilitar esta verificação.
-    Ex: 10.0.\*.\*; 192.168.0.\*';
+    Pode ser utilizado o formato que inclue caracter coringa (ex: 10.0.\*.\*; 192.168.0.\*), como também o formato CIDR
+    (ex: 10.0.0.0/16; 192.168.1.0/24)';
 
 $string['remote_moodles'] = 'Instalações remotas de Moodle integradas ao Moodle Provas';
 $string['remote_moodle'] = 'Instalação remota de Moodle integrada ao Moodle Provas';
@@ -108,3 +110,6 @@ $string['browser_old_version'] = 'Versão antiga do CD de Provas.';
 $string['has_student_session'] = 'Por questões de segurança só pode haver uma sessão ativa de um mesmo usuário no Moodle Provas. Como foi detectada a existência de uma sessão que está sendo utilizada para realização de prova, seu acesso foi bloqueado até o encerramento da prova ou que expire o tempo de vida dessa sessão.';
 $string['session_removed'] = 'Por questões de segurança só pode haver uma sessão ativa de um mesmo usuário no Moodle Provas. Desta forma, foi removida \'{$a}\' outra sessão que estava ativa em seu nome.';
 $string['sessions_removed'] = 'Por questões de segurança só pode haver uma sessão ativa de um mesmo usuário no Moodle Provas. Desta forma, foram removidas \'{$a}\' sessões que estavam ativas em seu nome.';
+
+$string['remoteaddrfield'] = 'Campo de IP do cliente';
+$string['remoteaddrfield_desc'] = 'Nome do campo do cabeçalho HTTP que identifica o IP do cliente que está acessando o Moodle Provas. Em geral este campo é \'REMOTE_ADDR\' ou \'X_REAL_IP\' no caso de haver proxy reverso.';

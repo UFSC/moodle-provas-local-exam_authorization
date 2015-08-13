@@ -96,6 +96,16 @@ if ($hassiteconfig && isset($ADMIN)) {
                             get_string('update_password', 'local_exam_authorization'),
                             get_string('update_password_descr', 'local_exam_authorization'),
                             '1'));
+    $options = array();
+    foreach($_SERVER AS $key=>$value) {
+        $options[$key] = $key;
+    }
+    ksort($options);
+
+    $settings->add(new admin_setting_configselect('local_exam_authorization/remoteaddrfield',
+                       get_string('remoteaddrfield', 'local_exam_authorization'),
+                       get_string('remoteaddrfield_desc', 'local_exam_authorization'), 'REMOTE_ADDR', $options));
+
     // -------------------------------------------------------------------------------------------------
 
     $table = new html_table();

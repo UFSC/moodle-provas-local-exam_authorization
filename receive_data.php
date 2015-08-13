@@ -40,7 +40,7 @@ $ip_pattern = "|^([0-9]{1,3}\.){3}[0-9]{1,3}$|";
 $network_pattern = "|^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$|";
 
 if (preg_match($ip_pattern, $ip) && preg_match($network_pattern, $network)) {
-    $real_ip = $_SERVER["REMOTE_ADDR"];
+    $real_ip = \local_exam_authorization\authorization::get_remote_addr();
     $rec = new stdClass();
     $rec->timemodified = time();
 

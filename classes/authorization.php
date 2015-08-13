@@ -244,13 +244,21 @@ class authorization {
         }
     }
 
+    public static function get_remote_addr() {
+        $remoteaddrfield = self::get_config('remoteaddrfield');
+        if (empty($remoteaddrfield) || !isset($_SERVER[$remoteaddrfield])) {
+            $remoteaddrfield = 'REMOTE_ADDR';
+        }
+        return $_SERVER[$remoteaddrfield];
+    }
+
     private static function add_to_log($access_key, $userid, $info='', $sessionid=0) {
         global $DB;
 
         $rec = new \stdClass();
         $rec->access_key = $access_key;
         $rec->userid = $userid;
-        $rec->ip = $_SERVER["REMOTE_ADDR"];
+        $rec->ip = self::get_remote_addr();
         $rec->time = time();
         $rec->info = $info;
         $rec->sessionid = $sessionid;
@@ -559,7 +567,7 @@ class authorization {
         $ranges = explode(';', $str_ranges);
         if (!empty($str_ranges) && !empty($ranges)) {
             foreach ($ranges AS $range) {
-                if (IPTools::ip_in_range($_SERVER['REMOTE_ADDR'], trim($range))) {
+                if (IPTools::ip_in_range(self::get_remote_addr(), trim($range))) {
                     return true;
                 }
             }
@@ -583,9 +591,10 @@ class authorization {
         $timeout = self::get_config('client_host_timeout');
 
         if (!empty($access_key->verify_client_host) && !empty($timeout)) {
+            $remote_addr = self::get_remote_addr();
             $sql = "SELECT *
                       FROM {exam_client_hosts}
-                     WHERE real_ip = '{$_SERVER['REMOTE_ADDR']}'
+                     WHERE real_ip = '{$remote_addr}'
                   ORDER BY timemodified DESC
                      LIMIT 1";
             if (!$client = $DB->get_record_sql($sql)) {
@@ -617,7 +626,7 @@ class authorization {
 
     // Check if $ip belongs to $cidr
     public static function ipCIDRCheck($ip, $cidr='0.0.0.0/24') {
-        list ($net, $mask) = split ("/", $cidr);
+        list ($net, $mask) = explode("/", $cidr);
 
         $ip_net = ip2long ($net);
         $ip_mask = ~((1 << (32 - $mask)) - 1);
