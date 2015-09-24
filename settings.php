@@ -106,6 +106,15 @@ if ($hassiteconfig && isset($ADMIN)) {
                        get_string('remoteaddrfield', 'local_exam_authorization'),
                        get_string('remoteaddrfield_desc', 'local_exam_authorization'), 'REMOTE_ADDR', $options));
 
+    $settings->add(new admin_setting_configtext('local_exam_authorization/upload_files_dir',
+                       get_string('upload_files_dir', 'local_exam_authorization'),
+                       get_string('upload_files_dir_desc', 'local_exam_authorization'), '/var/tmp/moodle', PARAM_TEXT));
+
+    $settings->add(new admin_setting_configtext('local_exam_authorization/upload_max_size_dir',
+                       get_string('upload_max_size_dir', 'local_exam_authorization'),
+                       get_string('upload_max_size_dir_desc', 'local_exam_authorization'), '100', PARAM_TEXT));
+
+
     // -------------------------------------------------------------------------------------------------
 
     $table = new html_table();

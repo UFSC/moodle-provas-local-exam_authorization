@@ -113,3 +113,28 @@ $string['sessions_removed'] = 'Por questões de segurança só pode haver uma se
 
 $string['remoteaddrfield'] = 'Campo de IP do cliente';
 $string['remoteaddrfield_desc'] = 'Nome do campo do cabeçalho HTTP que identifica o IP do cliente que está acessando o Moodle Provas. Em geral este campo é \'REMOTE_ADDR\' ou \'X_REAL_IP\' no caso de haver proxy reverso.';
+
+$string['receive_data_invalid'] = 'Dados em formato inválido.';
+$string['receive_data_success'] = 'Registro salvo.';
+
+$string['upload_files_dir'] = 'Diretório das screenshots e dos dados coletados.';
+$string['upload_files_dir_desc'] = 'Diretório de upload onde as screenshots e os arquivos coletados serão salvos. Estes arquivos são enviados pelo LiveCD para um webservice do moodle quando a função PrintScreen e Ctrl+PrintScreen são utilizadas (caso elas estejam ativadas no arquivo de configuração online).';
+
+$string['upload_max_size_dir'] = 'Tamanho máximo do diretório de upload (MiB).';
+$string['upload_max_size_dir_desc'] = 'O tamanho do diretório é a soma do tamanho de cada arquivo contido nele.';
+
+$string['upload_success'] = 'O arquivo {$a} foi recebido.';
+$string['upload_error_saving'] = 'Erro ao salvar o arquivo.';
+$string['upload_error_over_quota'] = 'O diretório de upload está cheio ({$a} MiB).';
+$string['upload_error_no_file'] = 'Nenhum arquivo foi enviado.';
+$string['upload_error_create_dir'] = 'Erro ao criar o diretório de upload: {$a}';
+$string['upload_error_no_permission'] = 'Sem permissão de escrita em: {$a}';
+
+$string['report_date'] = 'Data e hora do recebimento: ';
+$string['report_client_valid_ip'] = 'IP remoto (válido): ';
+$string['report_client_host'] = 'Host do IP válido: ';
+$string['report_client_ip'] = 'IP local do computador: ';
+$string['report_client_network'] = 'Endereço da rede local do computador: ';
+$string['report_client_livecd_version'] = 'Versão do LiveCD: ';
+$string['report_client_user_email'] = 'E-mail do usuário: ';
+$string['report_client_user_description'] = 'Descrição do problema: ';
