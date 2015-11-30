@@ -599,14 +599,14 @@ class authorization {
                      LIMIT 1";
             if (!$client = $DB->get_record_sql($sql)) {
                 if ($throw_exception) {
-                    throw new \Exception('unknow_client_host');
+                    throw new \Exception('unknown_client_host');
                 } else {
                     return false;
                 }
             }
             if ($client->timemodified + $timeout * 60 < time()) {
                 if ($throw_exception) {
-                    throw new \Exception('client_host_timeout');
+                    throw new \Exception('client_host_timedout');
                 } else {
                     return false;
                 }
