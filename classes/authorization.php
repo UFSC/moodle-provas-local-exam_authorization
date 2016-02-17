@@ -252,7 +252,7 @@ class authorization {
         return $_SERVER[$remoteaddrfield];
     }
 
-    private static function add_to_log($access_key, $userid, $info='', $sessionid=0) {
+    public static function add_to_log($access_key, $userid, $info='', $sessionid=0) {
         global $DB;
 
         $rec = new \stdClass();

@@ -114,10 +114,10 @@ $string['sessions_removed'] = 'Por questões de segurança só pode haver uma se
 $string['remoteaddrfield'] = 'Campo de IP do cliente';
 $string['remoteaddrfield_desc'] = 'Nome do campo do cabeçalho HTTP que identifica o IP do cliente que está acessando o Moodle Provas. Em geral este campo é \'REMOTE_ADDR\' ou \'X_REAL_IP\' no caso de haver proxy reverso.';
 
-$string['client_host_out_of_subnet'] = 'A chave de acesso foi gerada num computador que está fisicamente numa rede local, mas está sendo utilizada em outra rede, sendo que ela está configurada para não permitir tal uso. É necessário gerar uma nova chave diretamente neste computador (ou num computador que esteja em sua rede local), ou gerá-la selecionando a opção "Não" para o parâmetro "Restringir uso à rede local".';
 $string['browser_unknown_ip_header'] = 'O cabeçalho IP não foi informado. O uso do CD de Provas é necessário para a realização de provas.';
 $string['browser_invalid_ip_header'] = 'O cabeçalho IP é inválido. Está sendo utilizada a versão correta do CD de Provas?';
 $string['browser_unknown_network_header'] = 'O cabeçalho de rede não foi informado. O uso do CD de Provas é necessário para a realização de provas.';
 $string['browser_invalid_network_header'] = 'O cabeçalho de rede é inválido. Está sendo utilizada a versão correta do CD de Provas?';
 $string['unknown_client_host'] = 'Este computador não foi identificado. Está sendo utilizada a versão correta do CD de Provas? Se sim, então pode ser que haja algum problema com a rede local de computadores ou com a comunicação com o Moodle Provas.';
 $string['client_host_timedout'] = 'Este computador está há muito sem comunicar-se com o servidor. Está sendo utilizada a versão correta do CD de Provas? Se sim, então pode ser que haja algum problema com a rede local de computadores ou com a comunicação com o Moodle Provas.';
+$string['client_host_out_of_subnet'] = 'A chave de acesso foi gerada num computador que está fisicamente numa rede local, mas a chave está sendo utilizada em outra rede. Quem gerou a chave a configurou para não permitir tal uso. É necessário gerar uma nova chave diretamente neste computador, ou gerá-la selecionando a opção "Não" para o parâmetro "Restringir uso à rede local".';
