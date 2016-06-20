@@ -24,23 +24,23 @@ para realização da provas.
 No endereço abaixo você pode acessar um tutorial sobre a
 arquitetura do Moodle Provas:
 
-    https://gitlab.setic.ufsc.br/moodle-provas/blocks-exam_actions/wikis/home
+    https://github.com/UFSC/moodle-provas-blocks-exam_actions/wikis/home
 
 Download
 ========
 
 Este plugin está disponível no seguinte endereço:
 
-    https://gitlab.setic.ufsc.br/moodle-provas/local-exam_authorization
+    https://github.com/UFSC/moodle-provas-local-exam_authorization
 
 Os outros plugins podem ser encontrados em:
 
-    https://gitlab.setic.ufsc.br/moodle-provas/local-exam_remote
-    https://gitlab.setic.ufsc.br/moodle-provas/blocks-exam_actions
+    https://github.com/UFSC/moodle-provas-local-exam_remote
+    https://github.com/UFSC/moodle-provas-blocks-exam_actions
 
 O código e instruções para gravação do "CD de Provas" podem ser encontrados em:
 
-    https://gitlab.setic.ufsc.br/moodle-provas/livecd-provas
+    https://github.com/UFSC/moodle-provas-livecd-provas
 
 Instalação
 ==========
